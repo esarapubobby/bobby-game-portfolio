@@ -16,6 +16,8 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-ui': ['lucide-react', 'framer-motion'],
+          'vendor-anim': ['gsap', 'lenis'],
+          'vendor-three': ['three'],
           'vendor-supabase': ['@supabase/supabase-js'],
         },
       },

@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Play, Smartphone, Gamepad2, ChevronRight } from 'lucide-react';
+import { Play, Smartphone, Gamepad2, ChevronRight, ExternalLink } from 'lucide-react';
 import { Project } from '../../types';
-import { TiltedCard } from '../ui/TiltedCard';
+import { SpotlightCard } from '../ui/SpotlightCard';
 import { ICON_BUTTON_INTERACTIONS } from '../../lib/animations';
 
 interface ProjectCardProps {
@@ -19,45 +19,45 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
   };
 
   return (
-    <TiltedCard className="h-full">
-      <motion.article
-        layout
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-50px' }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="group relative rounded-2xl bg-[#111720] border border-white/10 hover:border-accent/50 transition-colors duration-300 flex flex-col justify-between overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-accent/5 h-full focus-within:ring-2 focus-within:ring-accent"
-      >
-        {/* Top Cover Image Area */}
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 25 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="h-full"
+    >
+      <SpotlightCard className="h-full group hover:shadow-2xl hover:shadow-accent/10 transition-shadow duration-300">
+        {/* Cover Image Area */}
         <div
           role="button"
           tabIndex={0}
           onClick={() => onSelect(project)}
           onKeyDown={handleKeyDown}
           aria-label={`Inspect ${project.title}`}
-          className="relative aspect-video w-full overflow-hidden bg-black/40 cursor-pointer focus:outline-none"
+          className="relative aspect-video w-full overflow-hidden bg-black/50 cursor-pointer focus:outline-none"
         >
           <motion.img
             src={project.coverImage}
             alt={project.title}
             loading="lazy"
-            whileHover={{ scale: 1.06 }}
+            whileHover={{ scale: 1.07 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             className="w-full h-full object-cover"
           />
 
-          {/* Cinematic Gradient Vignette */}
+          {/* Vignette Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#111720] via-transparent to-black/40 opacity-90 pointer-events-none" />
 
-          {/* Badges */}
+          {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
-            <span className="text-[11px] font-mono font-medium px-2.5 py-1 rounded bg-black/80 backdrop-blur-md text-accent border border-accent/30 uppercase tracking-wider">
+            <span className="text-[11px] font-mono font-medium px-2.5 py-1 rounded bg-black/80 backdrop-blur-md text-accent border border-accent/40 uppercase tracking-wider">
               {project.category}
             </span>
             <span
               className={`text-[11px] font-mono px-2 py-0.5 rounded backdrop-blur-md ${
                 project.status === 'Published'
-                  ? 'bg-lime-500/20 text-lime-300 border border-lime-500/30'
+                  ? 'bg-lime-500/20 text-lime-300 border border-lime-500/40'
                   : 'bg-black/70 text-gray-300 border border-white/10'
               }`}
             >
@@ -65,16 +65,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
             </span>
           </div>
 
-          {/* Inspect Hover Overlay Hint */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/40 backdrop-blur-[2px]">
-            <motion.div
-              initial={{ scale: 0.9, y: 6 }}
-              whileHover={{ scale: 1.05 }}
-              className="px-4 py-2 rounded-xl bg-accent text-black font-mono font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-accent/20"
-            >
+          {/* Hover Overlay Hint */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/50 backdrop-blur-[2px]">
+            <div className="px-4 py-2 rounded-xl bg-accent text-black font-mono font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-accent/25 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200">
               <Gamepad2 className="w-4 h-4" />
               <span>Inspect Systems</span>
-            </motion.div>
+            </div>
           </div>
         </div>
 
@@ -95,12 +91,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
               {project.shortDescription}
             </p>
 
-            {/* Technologies Pills */}
+            {/* Tech Tags */}
             <div className="mt-4 flex flex-wrap gap-1.5">
               {project.technologies.slice(0, 4).map((tech) => (
                 <span
                   key={tech}
-                  className="px-2.5 py-0.5 text-[11px] font-mono text-gray-300 bg-white/5 rounded-md border border-white/5 hover:border-accent/30 transition-colors"
+                  className="px-2.5 py-0.5 text-[11px] font-mono text-gray-300 bg-white/5 rounded-md border border-white/5 hover:border-accent/40 transition-colors"
                 >
                   {tech}
                 </span>
@@ -115,15 +111,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
 
           {/* Card Footer Actions */}
           <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-            <motion.button
+            <button
               type="button"
               onClick={() => onSelect(project)}
-              whileHover={{ x: 2 }}
               className="text-xs font-mono font-semibold text-accent hover:text-accent-hover flex items-center gap-1 group/btn focus:outline-none focus:underline"
             >
               <span>View Architecture</span>
               <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1" />
-            </motion.button>
+            </button>
 
             <div className="flex items-center gap-2">
               {project.googlePlayUrl && (
@@ -170,7 +165,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
             </div>
           </div>
         </div>
-      </motion.article>
-    </TiltedCard>
+      </SpotlightCard>
+    </motion.div>
   );
 };

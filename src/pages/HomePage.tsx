@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
 import { AmbientCanvas } from '../components/ui/AmbientCanvas';
@@ -9,8 +9,16 @@ import { AboutSection } from '../components/home/AboutSection';
 import { ExperienceSection } from '../components/home/ExperienceSection';
 import { EducationSection } from '../components/home/EducationSection';
 import { ContactSection } from '../components/home/ContactSection';
+import { initSmoothScroll, destroySmoothScroll } from '../lib/lenis';
 
 export const HomePage: React.FC = () => {
+  useEffect(() => {
+    initSmoothScroll();
+    return () => {
+      destroySmoothScroll();
+    };
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-[#0a0d0f] text-gray-100 flex flex-col justify-between selection:bg-accent/30 selection:text-white">
       {/* Dynamic ambient coordinate canvas */}

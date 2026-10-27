@@ -1,15 +1,50 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useEffect } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SectionHeading } from '../ui/SectionHeading';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { Briefcase, Calendar, CheckCircle2, MapPin } from 'lucide-react';
 import { TRANSITIONS } from '../../lib/animations';
 
+gsap.registerPlugin(ScrollTrigger);
+
 export const ExperienceSection: React.FC = () => {
   const { experience } = usePortfolio();
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const lineRef = useRef<HTMLDivElement | null>(null);
+  const shouldReduceMotion = useReducedMotion();
+
+  // GSAP ScrollTrigger timeline progress laser beam
+  useEffect(() => {
+    if (shouldReduceMotion || !sectionRef.current || !lineRef.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        lineRef.current,
+        { scaleY: 0 },
+        {
+          scaleY: 1,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 75%',
+            end: 'bottom 85%',
+            scrub: 0.5,
+          },
+        }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [shouldReduceMotion]);
 
   return (
-    <section id="experience" className="py-24 relative bg-[#0c1015]/60 border-t border-white/5 overflow-hidden">
+    <section
+      ref={sectionRef}
+      id="experience"
+      className="py-24 relative bg-[#0c1015]/60 border-t border-white/5 overflow-hidden"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading
           index="04"
@@ -17,7 +52,16 @@ export const ExperienceSection: React.FC = () => {
           subtitle="Collaborative studio game production and technical industry internships."
         />
 
-        <div className="relative border-l border-white/10 ml-4 md:ml-8 space-y-12">
+        <div className="relative ml-4 md:ml-8 space-y-12">
+          {/* Base Background Track Line */}
+          <div className="absolute left-0 top-2 bottom-4 w-[2px] bg-white/10" />
+
+          {/* Animated GSAP Laser Beam Foreground */}
+          <div
+            ref={lineRef}
+            className="absolute left-0 top-2 bottom-4 w-[2px] bg-gradient-to-b from-accent via-lime-400 to-emerald-400 origin-top shadow-[0_0_12px_var(--accent-color,#a3e635)]"
+          />
+
           {experience.map((item, idx) => (
             <motion.div
               key={item.id}
@@ -27,19 +71,19 @@ export const ExperienceSection: React.FC = () => {
               transition={{ duration: 0.5, delay: idx * 0.15, ease: [0.16, 1, 0.3, 1] }}
               className="relative pl-6 md:pl-10 group"
             >
-              {/* Animated Timeline marker node */}
+              {/* Timeline marker node */}
               <motion.div
                 initial={{ scale: 0 }}
                 whileInView={{ scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ type: 'spring', stiffness: 400, damping: 20, delay: idx * 0.15 + 0.1 }}
-                className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-[#111720] border-2 border-accent group-hover:bg-accent group-hover:scale-125 transition-all duration-300 shadow-md shadow-accent/20"
+                className="absolute -left-[7px] top-1.5 w-4 h-4 rounded-full bg-[#111720] border-2 border-accent group-hover:bg-accent group-hover:scale-125 transition-all duration-300 shadow-md shadow-accent/30"
               />
 
               <motion.div
                 whileHover={{ y: -4 }}
                 transition={TRANSITIONS.smooth}
-                className="p-6 sm:p-8 rounded-2xl bg-[#111720] border border-white/10 hover:border-accent/40 transition-colors shadow-lg hover:shadow-xl hover:shadow-accent/5"
+                className="p-6 sm:p-8 rounded-2xl bg-[#111720] border border-white/10 hover:border-accent/40 transition-colors shadow-lg hover:shadow-2xl hover:shadow-accent/5"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <div>
@@ -74,17 +118,13 @@ export const ExperienceSection: React.FC = () => {
                 {item.achievements && item.achievements.length > 0 && (
                   <div className="mt-4 space-y-2">
                     {item.achievements.map((ach, aIdx) => (
-                      <motion.div
+                      <div
                         key={aIdx}
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.2 + aIdx * 0.05 }}
                         className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-300"
                       >
                         <CheckCircle2 className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                         <span>{ach}</span>
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
                 )}

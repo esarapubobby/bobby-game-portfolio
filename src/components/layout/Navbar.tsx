@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, FileDown, Terminal, Gamepad2 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
+import { getLenis } from '../../lib/lenis';
 
 export const Navbar: React.FC = () => {
   const { settings } = usePortfolio();
@@ -63,7 +64,12 @@ export const Navbar: React.FC = () => {
     setMobileMenuOpen(false);
     const target = document.querySelector(href);
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
+      const lenis = getLenis();
+      if (lenis) {
+        lenis.scrollTo(target as HTMLElement, { offset: -70 });
+      } else {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
