@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { Palette, CheckCircle2, AlertCircle, Save, Sliders, FileText } from 'lucide-react';
 import { uploadFileToStorage, BUCKET_DOCUMENTS, isSupabaseConfigured } from '../../lib/supabase';
+import { BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
 
 const ACCENT_OPTIONS = [
   { id: 'lime', name: 'Neon Lime (Default)', color: '#a3e635' },
@@ -83,23 +85,37 @@ export const AdminSettings: React.FC = () => {
         </p>
       </div>
 
-      {success && (
-        <div className="p-4 rounded-xl bg-lime-950/40 border border-lime-500/40 flex items-center gap-3 text-xs sm:text-sm text-lime-200">
-          <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-          <span>Settings successfully synchronized and persisted.</span>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {success && (
+          <motion.div
+            key="settings-success"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="p-4 rounded-xl bg-lime-950/40 border border-lime-500/40 flex items-center gap-3 text-xs sm:text-sm text-lime-200 overflow-hidden"
+          >
+            <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
+            <span>Settings successfully synchronized and persisted.</span>
+          </motion.div>
+        )}
 
-      {errorMsg && (
-        <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-3 text-xs sm:text-sm text-red-200">
-          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
+        {errorMsg && (
+          <motion.div
+            key="settings-error"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="p-4 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-3 text-xs sm:text-sm text-red-200 overflow-hidden"
+          >
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <span>{errorMsg}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Accent Color Palette Selector */}
-        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4">
+        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
           <div className="flex items-center gap-2">
             <Palette className="w-5 h-5 text-accent" />
             <h2 className="font-bold text-white text-base font-display">
@@ -112,16 +128,19 @@ export const AdminSettings: React.FC = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
             {ACCENT_OPTIONS.map((opt) => (
-              <button
+              <motion.button
                 key={opt.id}
                 type="button"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                transition={TRANSITIONS.snappy}
                 onClick={() => {
                   setFormData({ ...formData, accentColor: opt.id });
                   document.documentElement.setAttribute('data-theme', opt.id);
                 }}
-                className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-colors ${
                   formData.accentColor === opt.id
-                    ? 'border-white bg-white/10 shadow-lg'
+                    ? 'border-white bg-white/15 shadow-lg shadow-white/5'
                     : 'border-white/5 bg-black/40 hover:border-white/20'
                 }`}
               >
@@ -132,13 +151,13 @@ export const AdminSettings: React.FC = () => {
                 <span className="text-[11px] font-mono text-gray-300 text-center">
                   {opt.name}
                 </span>
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
 
         {/* Hero Copy & Availability */}
-        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4">
+        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-accent" />
             <h2 className="font-bold text-white text-base font-display">
@@ -215,7 +234,7 @@ export const AdminSettings: React.FC = () => {
         </div>
 
         {/* About Bio Section */}
-        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4">
+        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
           <h2 className="font-bold text-white text-base font-display">
             About Section Biography
           </h2>
@@ -258,7 +277,7 @@ export const AdminSettings: React.FC = () => {
         </div>
 
         {/* Social & Contact Channels */}
-        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4">
+        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
           <h2 className="font-bold text-white text-base font-display">
             Contact Channels & Social Links
           </h2>
@@ -318,7 +337,7 @@ export const AdminSettings: React.FC = () => {
         </div>
 
         {/* Resume PDF Configuration */}
-        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4">
+        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-accent" />
             <h2 className="font-bold text-white text-base font-display">
@@ -337,7 +356,11 @@ export const AdminSettings: React.FC = () => {
               className="flex-1 w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm font-mono"
             />
 
-            <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-mono text-white cursor-pointer transition-colors flex-shrink-0">
+            <motion.label
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-mono text-white cursor-pointer transition-colors flex-shrink-0"
+            >
               <span>{uploadingResume ? 'Uploading PDF...' : 'Upload Replacement PDF'}</span>
               <input
                 type="file"
@@ -346,12 +369,12 @@ export const AdminSettings: React.FC = () => {
                 disabled={uploadingResume}
                 className="hidden"
               />
-            </label>
+            </motion.label>
           </div>
         </div>
 
         {/* Footer Text */}
-        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4">
+        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
           <h2 className="font-bold text-white text-base font-display">
             Website Footer Notice
           </h2>
@@ -365,14 +388,15 @@ export const AdminSettings: React.FC = () => {
 
         {/* Submit Button */}
         <div className="flex justify-end pt-4">
-          <button
+          <motion.button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-accent text-black font-bold text-xs uppercase font-mono tracking-wider hover:bg-accent-hover transition-all disabled:opacity-50 shadow-lg shadow-accent/10 active:scale-95"
+            {...BUTTON_INTERACTIONS}
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-accent text-black font-bold text-xs uppercase font-mono tracking-wider hover:bg-accent-hover transition-colors disabled:opacity-50 shadow-lg shadow-accent/15"
           >
             <Save className="w-4 h-4" />
             <span>{saving ? 'Persisting Changes...' : 'Save All Settings'}</span>
-          </button>
+          </motion.button>
         </div>
       </form>
     </div>

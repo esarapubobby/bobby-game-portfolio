@@ -1,7 +1,9 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { SectionHeading } from '../ui/SectionHeading';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { Gamepad2, Code2, Wrench, Cpu, CheckCircle } from 'lucide-react';
+import { VARIANTS, TRANSITIONS } from '../../lib/animations';
 
 export const SkillsSection: React.FC = () => {
   const { skills } = usePortfolio();
@@ -20,7 +22,7 @@ export const SkillsSection: React.FC = () => {
   };
 
   return (
-    <section id="skills" className="py-24 relative bg-[#0c1015]/60 border-y border-white/5">
+    <section id="skills" className="py-24 relative bg-[#0c1015]/60 border-y border-white/5 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading
           index="02"
@@ -28,11 +30,20 @@ export const SkillsSection: React.FC = () => {
           subtitle="Engine specialization, programming languages, production tools, and core software engineering fundamentals."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div
+          variants={VARIANTS.staggerContainer(0.1, 0.05)}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
           {skills.map((category, idx) => (
-            <div
+            <motion.div
               key={category.id}
-              className="p-6 rounded-2xl bg-[#111720] border border-white/10 hover:border-accent/40 transition-all flex flex-col justify-between group"
+              variants={VARIANTS.fadeUp}
+              whileHover={{ y: -5 }}
+              transition={TRANSITIONS.smooth}
+              className="p-6 rounded-2xl bg-[#111720] border border-white/10 hover:border-accent/40 transition-colors flex flex-col justify-between group shadow-lg hover:shadow-xl hover:shadow-accent/5"
             >
               <div>
                 {/* Header */}
@@ -56,14 +67,19 @@ export const SkillsSection: React.FC = () => {
                   </p>
                 )}
 
-                {/* Skills Badges */}
+                {/* Staggered Skills Badges */}
                 <div className="space-y-2">
-                  {category.skills.map((skill) => (
-                    <div
+                  {category.skills.map((skill, sIdx) => (
+                    <motion.div
                       key={skill.id}
-                      className={`flex items-center justify-between p-2.5 rounded-lg text-xs font-mono transition-colors ${
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.15 + sIdx * 0.04, duration: 0.35 }}
+                      whileHover={{ scale: 1.02, x: 3 }}
+                      className={`flex items-center justify-between p-2.5 rounded-lg text-xs font-mono transition-colors cursor-default ${
                         skill.highlight
-                          ? 'bg-white/10 text-white border border-accent/40 font-semibold'
+                          ? 'bg-white/10 text-white border border-accent/40 font-semibold shadow-sm shadow-accent/10'
                           : 'bg-white/5 text-gray-300 border border-white/5 hover:border-white/20'
                       }`}
                     >
@@ -76,9 +92,9 @@ export const SkillsSection: React.FC = () => {
                         {skill.name}
                       </span>
                       {skill.highlight && (
-                        <CheckCircle className="w-3.5 h-3.5 text-accent" />
+                        <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0" />
                       )}
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -86,11 +102,11 @@ export const SkillsSection: React.FC = () => {
               {/* Category Footer */}
               <div className="mt-6 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-gray-500">
                 <span>Verified in production</span>
-                <span className="text-accent">#0{idx + 1}</span>
+                <span className="text-accent font-semibold">#0{idx + 1}</span>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

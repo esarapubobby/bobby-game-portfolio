@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   uploadFileToStorage,
   deleteFileFromStorage,
   isSupabaseConfigured,
 } from '../../lib/supabase';
 import { Upload, FileText, Trash2, Copy, Check, AlertCircle, ExternalLink, HardDrive } from 'lucide-react';
+import { ICON_BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
 
 interface UploadedFileEntry {
   name: string;
@@ -147,15 +149,22 @@ export const AdminMedia: React.FC = () => {
         </p>
       </div>
 
-      {errorMessage && (
-        <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-3 text-xs sm:text-sm text-red-200">
-          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-          <span>{errorMessage}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="p-4 rounded-xl bg-red-950/40 border border-red-500/40 flex items-center gap-3 text-xs sm:text-sm text-red-200 overflow-hidden"
+          >
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <span>{errorMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Upload Zone */}
-      <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-5">
+      <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-5 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <HardDrive className="w-5 h-5 text-accent" />
@@ -165,14 +174,14 @@ export const AdminMedia: React.FC = () => {
           </div>
 
           {/* Bucket Selector Pills */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5">
             <button
               type="button"
               onClick={() => setSelectedBucket('project-media')}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${
                 selectedBucket === 'project-media'
                   ? 'bg-accent text-black font-semibold'
-                  : 'bg-white/5 text-gray-400 hover:text-white'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               Bucket: project-media (Images)
@@ -183,7 +192,7 @@ export const AdminMedia: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${
                 selectedBucket === 'documents'
                   ? 'bg-accent text-black font-semibold'
-                  : 'bg-white/5 text-gray-400 hover:text-white'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               Bucket: documents (PDF)
@@ -191,8 +200,12 @@ export const AdminMedia: React.FC = () => {
           </div>
         </div>
 
-        {/* Drop / Select File Box */}
-        <label className="border-2 border-dashed border-white/15 hover:border-accent/60 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors bg-black/20 group">
+        {/* Drop / Select File Box with Hover Feedback */}
+        <motion.label
+          whileHover={{ scale: 1.008 }}
+          whileTap={{ scale: 0.995 }}
+          className="border-2 border-dashed border-white/15 hover:border-accent/60 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors bg-black/20 group"
+        >
           <Upload className="w-8 h-8 text-gray-400 group-hover:text-accent mb-3 transition-colors" />
           <span className="text-sm font-semibold text-white">
             {uploading ? 'Processing & Uploading...' : 'Click or drop file to upload'}
@@ -209,86 +222,96 @@ export const AdminMedia: React.FC = () => {
             disabled={uploading}
             className="hidden"
           />
-        </label>
+        </motion.label>
       </div>
 
-      {/* Uploaded Assets Library */}
+      {/* Uploaded Assets Library with Animated Grid */}
       <div className="space-y-4">
         <h2 className="text-sm font-mono uppercase tracking-wider text-gray-400">
           Managed Media Library ({uploadedFiles.length})
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {uploadedFiles.map((file, idx) => (
-            <div
-              key={idx}
-              className="p-4 rounded-xl bg-[#111720] border border-white/10 flex flex-col justify-between space-y-3 group"
-            >
-              <div className="space-y-3">
-                {file.type === 'image' ? (
-                  <div className="aspect-video w-full rounded-lg overflow-hidden bg-black/50 border border-white/5 relative">
-                    <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="aspect-video w-full rounded-lg bg-black/50 border border-white/5 flex flex-col items-center justify-center text-accent">
-                    <FileText className="w-10 h-10 mb-2" />
-                    <span className="text-xs font-mono text-gray-300">PDF Document</span>
-                  </div>
-                )}
-
-                <div>
-                  <h3 className="font-semibold text-sm text-white truncate font-mono" title={file.name}>
-                    {file.name}
-                  </h3>
-                  <div className="flex items-center justify-between text-[11px] font-mono text-gray-400 mt-1">
-                    <span>{file.bucket}</span>
-                    <span>{(file.size / 1024).toFixed(0)} KB</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-white/5 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => handleCopy(file.url)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-xs font-mono text-gray-300 transition-colors"
-                >
-                  {copiedUrl === file.url ? (
-                    <>
-                      <Check className="w-3 h-3 text-accent" />
-                      <span>Copied!</span>
-                    </>
+        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <AnimatePresence mode="popLayout">
+            {uploadedFiles.map((file, idx) => (
+              <motion.div
+                key={idx}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={TRANSITIONS.smooth}
+                className="p-4 rounded-xl bg-[#111720] border border-white/10 flex flex-col justify-between space-y-3 group shadow-lg hover:border-accent/40 transition-colors"
+              >
+                <div className="space-y-3">
+                  {file.type === 'image' ? (
+                    <div className="aspect-video w-full rounded-lg overflow-hidden bg-black/50 border border-white/5 relative">
+                      <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                    </div>
                   ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      <span>Copy URL</span>
-                    </>
+                    <div className="aspect-video w-full rounded-lg bg-black/50 border border-white/5 flex flex-col items-center justify-center text-accent">
+                      <FileText className="w-10 h-10 mb-2" />
+                      <span className="text-xs font-mono text-gray-300">PDF Document</span>
+                    </div>
                   )}
-                </button>
 
-                <div className="flex items-center gap-1">
-                  <a
-                    href={file.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 rounded text-gray-400 hover:text-white"
-                    title="Open in new tab"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(file)}
-                    className="p-1.5 rounded text-gray-400 hover:text-red-400"
-                    title="Delete record"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div>
+                    <h3 className="font-semibold text-sm text-white truncate font-mono" title={file.name}>
+                      {file.name}
+                    </h3>
+                    <div className="flex items-center justify-between text-[11px] font-mono text-gray-400 mt-1">
+                      <span>{file.bucket}</span>
+                      <span>{(file.size / 1024).toFixed(0)} KB</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+
+                <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                  <motion.button
+                    type="button"
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => handleCopy(file.url)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-gray-300 transition-colors"
+                  >
+                    {copiedUrl === file.url ? (
+                      <>
+                        <Check className="w-3 h-3 text-accent" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>Copy URL</span>
+                      </>
+                    )}
+                  </motion.button>
+
+                  <div className="flex items-center gap-1">
+                    <motion.a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      {...ICON_BUTTON_INTERACTIONS}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-white"
+                      title="Open in new tab"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </motion.a>
+                    <motion.button
+                      type="button"
+                      {...ICON_BUTTON_INTERACTIONS}
+                      onClick={() => handleDelete(file)}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-400"
+                      title="Delete record"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
   );

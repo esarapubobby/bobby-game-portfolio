@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { Lock, Mail, KeyRound, AlertCircle, ArrowLeft, ShieldCheck, HelpCircle, Terminal } from 'lucide-react';
+import { BUTTON_INTERACTIONS } from '../../lib/animations';
 
 export const AdminLogin: React.FC = () => {
   const { signIn, isSupabaseConfigured } = useAuth();
@@ -29,11 +31,16 @@ export const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#090c0e] flex flex-col justify-center items-center p-4 selection:bg-accent/30 selection:text-white">
+    <div className="min-h-screen bg-[#090c0e] flex flex-col justify-center items-center p-4 selection:bg-accent/30 selection:text-white relative overflow-hidden">
       {/* Background accents */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-accent/10 rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="w-full max-w-md relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-md relative z-10"
+      >
         {/* Back to Site link */}
         <div className="mb-6">
           <Link
@@ -71,12 +78,19 @@ export const AdminLogin: React.FC = () => {
             </div>
           )}
 
-          {errorMsg && (
-            <div className="p-3.5 rounded-lg bg-red-950/40 border border-red-500/40 text-xs font-mono text-red-200 flex items-start gap-2 animate-fadeIn">
-              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+          <AnimatePresence>
+            {errorMsg && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="p-3.5 rounded-lg bg-red-950/40 border border-red-500/40 text-xs font-mono text-red-200 flex items-start gap-2 overflow-hidden"
+              >
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <span>{errorMsg}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -113,10 +127,11 @@ export const AdminLogin: React.FC = () => {
               </div>
             </div>
 
-            <button
+            <motion.button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 inline-flex items-center justify-center gap-2 py-3 rounded-lg bg-accent text-black font-bold text-xs uppercase tracking-wider hover:bg-accent-hover transition-all disabled:opacity-50 active:scale-95 focus:outline-none focus:ring-2 focus:ring-accent"
+              {...BUTTON_INTERACTIONS}
+              className="w-full mt-2 inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-black font-bold text-xs uppercase tracking-wider hover:bg-accent-hover transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent shadow-lg shadow-accent/10"
             >
               {loading ? (
                 <>
@@ -129,7 +144,7 @@ export const AdminLogin: React.FC = () => {
                   <span>Authenticate Portal</span>
                 </>
               )}
-            </button>
+            </motion.button>
           </form>
 
           {/* Toggle setup instructions */}
@@ -144,27 +159,34 @@ export const AdminLogin: React.FC = () => {
             </button>
           </div>
 
-          {showSetupGuide && (
-            <div className="p-4 rounded-xl bg-black/50 border border-white/10 text-xs text-gray-300 space-y-2.5 font-mono animate-fadeIn">
-              <p className="font-bold text-white flex items-center gap-1.5">
-                <Terminal className="w-3.5 h-3.5 text-accent" />
-                How to set up your Supabase Admin:
-              </p>
-              <ol className="list-decimal pl-4 space-y-1 text-gray-400 text-[11px]">
-                <li>Sign up at <span className="text-white">supabase.com</span> and create a project.</li>
-                <li>Go to <span className="text-white">SQL Editor</span> and execute <span className="text-accent">supabase/schema.sql</span>.</li>
-                <li>Go to <span className="text-white">Authentication &gt; Users &gt; Add User</span> with your email.</li>
-                <li>In SQL Editor, authorize your user:
-                  <div className="p-2 bg-black rounded mt-1 text-accent break-all text-[10px]">
-                    INSERT INTO public.admin_users (id, email) VALUES ('&lt;user_id&gt;', 'esarapubobby@gmail.com');
-                  </div>
-                </li>
-                <li>Paste your project URL & Anon key into <span className="text-white">.env</span>.</li>
-              </ol>
-            </div>
-          )}
+          <AnimatePresence>
+            {showSetupGuide && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="p-4 rounded-xl bg-black/50 border border-white/10 text-xs text-gray-300 space-y-2.5 font-mono overflow-hidden"
+              >
+                <p className="font-bold text-white flex items-center gap-1.5">
+                  <Terminal className="w-3.5 h-3.5 text-accent" />
+                  How to set up your Supabase Admin:
+                </p>
+                <ol className="list-decimal pl-4 space-y-1 text-gray-400 text-[11px]">
+                  <li>Sign up at <span className="text-white">supabase.com</span> and create a project.</li>
+                  <li>Go to <span className="text-white">SQL Editor</span> and execute <span className="text-accent">supabase/schema.sql</span>.</li>
+                  <li>Go to <span className="text-white">Authentication &gt; Users &gt; Add User</span> with your email.</li>
+                  <li>In SQL Editor, authorize your user:
+                    <div className="p-2 bg-black rounded mt-1 text-accent break-all text-[10px]">
+                      INSERT INTO public.admin_users (id, email) VALUES ('&lt;user_id&gt;', 'esarapubobby@gmail.com');
+                    </div>
+                  </li>
+                  <li>Paste your project URL & Anon key into <span className="text-white">.env</span>.</li>
+                </ol>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard,
@@ -18,6 +19,7 @@ import {
   Cloud,
   CloudOff,
 } from 'lucide-react';
+import { BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
 
 export const AdminLayout: React.FC = () => {
   const { user, isAdmin, loading, signOut, isSupabaseConfigured } = useAuth();
@@ -63,21 +65,23 @@ export const AdminLayout: React.FC = () => {
       {/* Mobile Header */}
       <div className="md:hidden bg-[#0e1319] border-b border-white/10 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-accent/20 border border-accent/40 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-accent/20 border border-accent/40 flex items-center justify-center">
             <ShieldCheck className="w-4 h-4 text-accent" />
           </div>
           <span className="font-display font-bold text-sm text-white">Admin Console</span>
         </div>
 
-        <button
+        <motion.button
+          whileTap={{ scale: 0.92 }}
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-300"
+          aria-label="Toggle admin sidebar"
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        </motion.button>
       </div>
 
-      {/* Sidebar Navigation */}
+      {/* Desktop Sidebar Navigation */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#0d1217] border-r border-white/10 flex flex-col justify-between transform transition-transform duration-200 md:translate-x-0 md:static ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -114,7 +118,7 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links with Animated Pill Indicator */}
           <nav className="p-3 space-y-1">
             {navItems.map((item) => (
               <NavLink
@@ -123,15 +127,27 @@ export const AdminLayout: React.FC = () => {
                 end={item.end}
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-mono transition-colors ${
+                  `relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-mono transition-colors ${
                     isActive
-                      ? 'bg-accent text-black font-bold shadow-sm'
+                      ? 'text-black font-bold'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`
                 }
               >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
-                <span>{item.name}</span>
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <motion.span
+                        layoutId="adminActiveNav"
+                        className="absolute inset-0 rounded-lg bg-accent shadow-sm -z-0"
+                        transition={TRANSITIONS.snappy}
+                        aria-hidden="true"
+                      />
+                    )}
+                    <item.icon className="w-4 h-4 flex-shrink-0 relative z-10" />
+                    <span className="relative z-10">{item.name}</span>
+                  </>
+                )}
               </NavLink>
             ))}
           </nav>
@@ -139,17 +155,19 @@ export const AdminLayout: React.FC = () => {
 
         {/* Footer with User info & logout */}
         <div className="p-4 border-t border-white/10 space-y-3">
-          <Link
-            to="/"
-            target="_blank"
-            className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 border border-white/5 hover:border-white/20 text-xs font-mono text-gray-300 hover:text-white transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <ExternalLink className="w-3.5 h-3.5 text-accent" />
-              <span>View Live Website</span>
-            </span>
-            <span>&rarr;</span>
-          </Link>
+          <motion.div {...BUTTON_INTERACTIONS}>
+            <Link
+              to="/"
+              target="_blank"
+              className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 border border-white/5 hover:border-white/20 text-xs font-mono text-gray-300 hover:text-white transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <ExternalLink className="w-3.5 h-3.5 text-accent" />
+                <span>View Live Website</span>
+              </span>
+              <span>&rarr;</span>
+            </Link>
+          </motion.div>
 
           <div className="flex items-center justify-between pt-2">
             <div className="overflow-hidden mr-2">
@@ -159,13 +177,14 @@ export const AdminLayout: React.FC = () => {
               <span className="text-[10px] font-mono text-accent">Administrator</span>
             </div>
 
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
               onClick={handleSignOut}
               className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 hover:text-red-400 text-gray-400 transition-colors"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />
-            </button>
+            </motion.button>
           </div>
         </div>
       </aside>

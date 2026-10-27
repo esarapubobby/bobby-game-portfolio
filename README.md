@@ -23,6 +23,13 @@ A cinematic, production-ready portfolio and content management system engineered
   - Storage & Media Manager with file validation for screenshots, covers, and PDF resume updates.
   - Secure Contact Message inbox with direct email reply actions.
 - **Enterprise-Grade Security**: Supabase Row Level Security (RLS) policies protecting database tables and storage buckets against unauthorized reads, writes, and modifications.
+- **Motion Design System**: Snappy, hardware-accelerated animations using Framer Motion (Motion for React):
+  - **Hero SplitText**: Non-blocking staggered text reveal with smooth blur-to-focus transition.
+  - **Hero Atmospheric Spotlight & Parallax**: Soft ambient spotlight pulse and desktop mouse parallax with physics spring damping.
+  - **Dynamic Navigation Pill**: Smooth `layoutId` pill sliding between active section anchors during scrolling.
+  - **3D Tilt & Spotlight Cards**: Interactive card tilt with cursor-following radial spotlight shine (Aceternity UI & React Bits reference), with automatic graceful touch fallback.
+  - **Animated Filtering & Layout Transitions**: Seamless project grid reorganization using `AnimatePresence` and layout animations.
+  - **Accessible & Performance-Minded**: Full support for `prefers-reduced-motion` and mobile touch optimization.
 
 ---
 

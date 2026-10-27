@@ -1,7 +1,9 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { Gamepad2, Lock, ArrowUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { BUTTON_INTERACTIONS, ICON_BUTTON_INTERACTIONS } from '../../lib/animations';
 
 export const Footer: React.FC = () => {
   const { settings } = usePortfolio();
@@ -31,32 +33,35 @@ export const Footer: React.FC = () => {
 
           {/* Quick Anchor Links */}
           <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-400 font-mono">
-            <a href="#projects" className="hover:text-white transition-colors">Projects</a>
-            <a href="#skills" className="hover:text-white transition-colors">Skills</a>
-            <a href="#about" className="hover:text-white transition-colors">About</a>
-            <a href="#experience" className="hover:text-white transition-colors">Experience</a>
-            <a href="#education" className="hover:text-white transition-colors">Education</a>
-            <a href="#contact" className="hover:text-white transition-colors">Contact</a>
+            <a href="#projects" className="hover:text-accent transition-colors">Projects</a>
+            <a href="#skills" className="hover:text-accent transition-colors">Skills</a>
+            <a href="#about" className="hover:text-accent transition-colors">About</a>
+            <a href="#experience" className="hover:text-accent transition-colors">Experience</a>
+            <a href="#education" className="hover:text-accent transition-colors">Education</a>
+            <a href="#contact" className="hover:text-accent transition-colors">Contact</a>
           </div>
 
           {/* Scroll to Top and Admin Link */}
           <div className="flex items-center gap-4">
-            <Link
-              to="/admin"
-              className="inline-flex items-center gap-1.5 text-[11px] font-mono text-gray-400 hover:text-accent transition-colors px-2.5 py-1 rounded bg-white/5 border border-white/5 hover:border-accent/40"
-              title="Protected Admin Portal"
-            >
-              <Lock className="w-3 h-3 text-accent" />
-              <span>Admin Portal</span>
-            </Link>
+            <motion.div {...BUTTON_INTERACTIONS}>
+              <Link
+                to="/admin"
+                className="inline-flex items-center gap-1.5 text-[11px] font-mono text-gray-400 hover:text-accent transition-colors px-2.5 py-1 rounded bg-white/5 border border-white/5 hover:border-accent/40"
+                title="Protected Admin Portal"
+              >
+                <Lock className="w-3 h-3 text-accent" />
+                <span>Admin Portal</span>
+              </Link>
+            </motion.div>
 
-            <button
+            <motion.button
+              {...ICON_BUTTON_INTERACTIONS}
               onClick={handleScrollToTop}
               className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 transition-colors"
               aria-label="Back to top"
             >
               <ArrowUp className="w-4 h-4" />
-            </button>
+            </motion.button>
           </div>
         </div>
 

@@ -1,13 +1,15 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { SectionHeading } from '../ui/SectionHeading';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { Briefcase, Calendar, CheckCircle2, MapPin } from 'lucide-react';
+import { TRANSITIONS } from '../../lib/animations';
 
 export const ExperienceSection: React.FC = () => {
   const { experience } = usePortfolio();
 
   return (
-    <section id="experience" className="py-24 relative bg-[#0c1015]/60 border-t border-white/5">
+    <section id="experience" className="py-24 relative bg-[#0c1015]/60 border-t border-white/5 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading
           index="04"
@@ -16,30 +18,47 @@ export const ExperienceSection: React.FC = () => {
         />
 
         <div className="relative border-l border-white/10 ml-4 md:ml-8 space-y-12">
-          {experience.map((item) => (
-            <div key={item.id} className="relative pl-6 md:pl-10 group">
-              {/* Timeline marker */}
-              <div className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-[#111720] border-2 border-accent group-hover:bg-accent group-hover:scale-125 transition-all duration-300" />
+          {experience.map((item, idx) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, x: -25 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: idx * 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="relative pl-6 md:pl-10 group"
+            >
+              {/* Animated Timeline marker node */}
+              <motion.div
+                initial={{ scale: 0 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20, delay: idx * 0.15 + 0.1 }}
+                className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-[#111720] border-2 border-accent group-hover:bg-accent group-hover:scale-125 transition-all duration-300 shadow-md shadow-accent/20"
+              />
 
-              <div className="p-6 sm:p-8 rounded-2xl bg-[#111720] border border-white/10 hover:border-accent/40 transition-colors">
+              <motion.div
+                whileHover={{ y: -4 }}
+                transition={TRANSITIONS.smooth}
+                className="p-6 sm:p-8 rounded-2xl bg-[#111720] border border-white/10 hover:border-accent/40 transition-colors shadow-lg hover:shadow-xl hover:shadow-accent/5"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <div>
                     <h3 className="text-xl sm:text-2xl font-bold text-white font-display">
                       {item.role}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1 text-accent font-mono text-sm">
+                    <div className="flex items-center gap-2 mt-1 text-accent font-mono text-sm font-semibold">
                       <Briefcase className="w-4 h-4" />
                       <span>{item.company}</span>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-gray-400">
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded bg-white/5 border border-white/5">
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/5">
                       <Calendar className="w-3.5 h-3.5 text-accent" />
                       {item.duration}
                     </span>
                     {item.location && (
-                      <span className="flex items-center gap-1.5 px-3 py-1 rounded bg-white/5 border border-white/5">
+                      <span className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/5">
                         <MapPin className="w-3.5 h-3.5" />
                         {item.location}
                       </span>
@@ -54,11 +73,18 @@ export const ExperienceSection: React.FC = () => {
                 {/* Achievements list */}
                 {item.achievements && item.achievements.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    {item.achievements.map((ach, idx) => (
-                      <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-300">
+                    {item.achievements.map((ach, aIdx) => (
+                      <motion.div
+                        key={aIdx}
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 + aIdx * 0.05 }}
+                        className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-300"
+                      >
                         <CheckCircle2 className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                         <span>{ach}</span>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 )}
@@ -69,15 +95,15 @@ export const ExperienceSection: React.FC = () => {
                     {item.technologies.map((tech) => (
                       <span
                         key={tech}
-                        className="px-2.5 py-1 text-xs font-mono text-gray-400 bg-white/5 rounded border border-white/5"
+                        className="px-2.5 py-1 text-xs font-mono text-gray-400 bg-white/5 rounded-md border border-white/5 hover:border-accent/30 transition-colors"
                       >
                         {tech}
                       </span>
                     ))}
                   </div>
                 )}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           ))}
         </div>
       </div>

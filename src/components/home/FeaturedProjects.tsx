@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SectionHeading } from '../ui/SectionHeading';
 import { ProjectCard } from './ProjectCard';
 import { ProjectModal } from './ProjectModal';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { Project } from '../../types';
 import { Filter, AlertCircle, RefreshCw } from 'lucide-react';
+import { TRANSITIONS } from '../../lib/animations';
 
 export const FeaturedProjects: React.FC = () => {
   const { projects, loading, error, refreshData } = usePortfolio();
@@ -40,25 +42,34 @@ export const FeaturedProjects: React.FC = () => {
             subtitle="Published games, prototypes, and technical gameplay systems built with Unity and C#."
           />
 
-          {/* Category Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
-            <span className="text-xs font-mono text-gray-500 mr-2 flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5" /> Filter:
+          {/* Category Filter Pills with Animated Selection Slider */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none bg-[#111720]/80 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md">
+            <span className="text-xs font-mono text-gray-400 px-2 flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-accent" /> Filter:
             </span>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-full text-xs font-mono transition-all whitespace-nowrap ${
-                  selectedCategory === cat
-                    ? 'bg-accent text-black font-bold shadow-sm'
-                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const isSelected = selectedCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`relative px-3.5 py-1.5 rounded-xl text-xs font-mono transition-colors whitespace-nowrap focus:outline-none ${
+                    isSelected ? 'text-black font-bold' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {isSelected && (
+                    <motion.span
+                      layoutId="activeFilterPill"
+                      className="absolute inset-0 rounded-xl bg-accent shadow-sm"
+                      transition={TRANSITIONS.snappy}
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="relative z-10">{cat}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -99,21 +110,26 @@ export const FeaturedProjects: React.FC = () => {
           </div>
         )}
 
-        {/* Project Cards Grid */}
+        {/* Smooth Animated Project Cards Grid */}
         {!loading && filteredProjects.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {filteredProjects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onSelect={(proj) => setActiveModalProject(proj)}
-              />
-            ))}
-          </div>
+          <motion.div
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredProjects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onSelect={(proj) => setActiveModalProject(proj)}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
 
-      {/* Detail Modal */}
+      {/* Accessible Detail Modal with Smooth Backdrop & Spring Scale */}
       <ProjectModal
         project={activeModalProject}
         onClose={() => setActiveModalProject(null)}
