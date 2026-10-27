@@ -47,6 +47,21 @@ export const GameScene3D: React.FC<{ className?: string }> = ({ className = '' }
     const group = new THREE.Group();
     scene.add(group);
 
+    const THEME_COLORS: Record<string, number> = {
+      lime: 0xa3e635,
+      emerald: 0x10b981,
+      cyan: 0x06b6d4,
+      amber: 0xf59e0b,
+      violet: 0x8b5cf6,
+    };
+
+    const getThemeColor = () => {
+      const activeTheme = document.documentElement.getAttribute('data-theme') || 'lime';
+      return THEME_COLORS[activeTheme] || 0xa3e635;
+    };
+
+    const initialColor = getThemeColor();
+
     // 1. Core Polyhedron (Low-poly faceted game crystal)
     const coreGeometry = new THREE.IcosahedronGeometry(1.2, 0);
     const coreMaterial = new THREE.MeshStandardMaterial({
@@ -58,10 +73,10 @@ export const GameScene3D: React.FC<{ className?: string }> = ({ className = '' }
     const coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
     group.add(coreMesh);
 
-    // 2. Wireframe Edge Cage (Neon-lime outline mimicking Unity wireframe)
+    // 2. Wireframe Edge Cage (Neon outline mimicking Unity wireframe)
     const wireframeGeometry = new THREE.WireframeGeometry(coreGeometry);
     const wireframeMaterial = new THREE.LineBasicMaterial({
-      color: 0xa3e635, // Neon Lime
+      color: initialColor,
       linewidth: 1.5,
       transparent: true,
       opacity: 0.85,
@@ -72,7 +87,7 @@ export const GameScene3D: React.FC<{ className?: string }> = ({ className = '' }
     // 3. Unity Transform Gizmo Rings
     const ringGeometry = new THREE.TorusGeometry(1.7, 0.015, 16, 64);
     const ringMaterial = new THREE.MeshBasicMaterial({
-      color: 0xa3e635,
+      color: initialColor,
       transparent: true,
       opacity: 0.35,
     });
@@ -95,7 +110,7 @@ export const GameScene3D: React.FC<{ className?: string }> = ({ className = '' }
     }
     emberGeometry.setAttribute('position', new THREE.BufferAttribute(emberPositions, 3));
     const emberMaterial = new THREE.PointsMaterial({
-      color: 0xa3e635,
+      color: initialColor,
       size: 0.045,
       transparent: true,
       opacity: 0.7,
@@ -108,13 +123,23 @@ export const GameScene3D: React.FC<{ className?: string }> = ({ className = '' }
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xa3e635, 2.5);
+    const directionalLight = new THREE.DirectionalLight(initialColor, 2.5);
     directionalLight.position.set(3, 4, 3);
     scene.add(directionalLight);
 
     const backLight = new THREE.DirectionalLight(0x06b6d4, 1.8);
     backLight.position.set(-3, -3, -2);
     scene.add(backLight);
+
+    // Listen for theme attribute changes
+    const themeObserver = new MutationObserver(() => {
+      const c = getThemeColor();
+      wireframeMaterial.color.setHex(c);
+      ringMaterial.color.setHex(c);
+      emberMaterial.color.setHex(c);
+      directionalLight.color.setHex(c);
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
     // Pointer-based rotation tracking
     let mouseX = 0;
@@ -193,6 +218,7 @@ export const GameScene3D: React.FC<{ className?: string }> = ({ className = '' }
     animate();
 
     return () => {
+      themeObserver.disconnect();
       window.removeEventListener('mousemove', onPointerMove);
       window.removeEventListener('resize', onResize);
       observer.disconnect();

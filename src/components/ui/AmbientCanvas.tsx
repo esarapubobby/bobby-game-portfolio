@@ -18,6 +18,16 @@ export const AmbientCanvas: React.FC = () => {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
+    let currentAccentRgb = '163, 230, 53';
+    const updateAccentColor = () => {
+      const val = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim();
+      if (val) currentAccentRgb = val.replace(/\s+/g, ', ');
+    };
+    updateAccentColor();
+
+    const themeObserver = new MutationObserver(updateAccentColor);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
     let resizeTimeout: any;
     const handleResize = () => {
       clearTimeout(resizeTimeout);
@@ -120,7 +130,7 @@ export const AmbientCanvas: React.FC = () => {
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(163, 230, 53, ${0.09 * (1 - dist / maxDist)})`;
+            ctx.strokeStyle = `rgba(${currentAccentRgb}, ${0.12 * (1 - dist / maxDist)})`;
             ctx.lineWidth = 0.6;
             ctx.stroke();
           }
@@ -129,7 +139,7 @@ export const AmbientCanvas: React.FC = () => {
         // Draw particle node
         ctx.beginPath();
         ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(163, 230, 53, ${p1.alpha})`;
+        ctx.fillStyle = `rgba(${currentAccentRgb}, ${p1.alpha})`;
         ctx.fill();
       }
 
@@ -139,6 +149,7 @@ export const AmbientCanvas: React.FC = () => {
     render();
 
     return () => {
+      themeObserver.disconnect();
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);

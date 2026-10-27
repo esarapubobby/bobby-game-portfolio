@@ -4,6 +4,8 @@ import { X, ExternalLink, Play, CheckCircle2, ChevronRight, Layers, Smartphone }
 import { Project } from '../../types';
 import { formatYouTubeEmbedUrl } from '../../lib/utils';
 import { VARIANTS, BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
+import { getLenis } from '../../lib/lenis';
+import { ProjectPlaceholder } from '../ui/ProjectPlaceholder';
 
 interface ProjectModalProps {
   project: Project | null;
@@ -13,28 +15,44 @@ interface ProjectModalProps {
 export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) => {
   const [activeMediaTab, setActiveMediaTab] = useState<'video' | 'screenshots'>('video');
   const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
+
     if (project) {
       document.body.style.overflow = 'hidden';
+      const lenis = getLenis();
+      lenis?.stop();
       window.addEventListener('keydown', handleKeyDown);
+      setImageError(false);
+      setSelectedScreenshotIndex(0);
+      setActiveMediaTab(project.gameplayVideoUrl ? 'video' : 'screenshots');
     }
+
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
+      const lenis = getLenis();
+      lenis?.start();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [project, onClose]);
 
   const youtubeEmbedUrl = formatYouTubeEmbedUrl(project?.gameplayVideoUrl);
   const hasVideo = Boolean(youtubeEmbedUrl || project?.gameplayVideoUrl);
-  const screenshots = project?.screenshots && project.screenshots.length > 0
+
+  const rawScreenshots = project?.screenshots && project.screenshots.length > 0
     ? project.screenshots
     : project?.coverImage
     ? [project.coverImage]
     : [];
+
+  // Filter out any empty strings or old unsplash placeholders
+  const validScreenshots = rawScreenshots.filter(
+    (url) => url && typeof url === 'string' && url.trim().length > 0 && !url.includes('images.unsplash.com')
+  );
 
   return (
     <AnimatePresence>
@@ -45,7 +63,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/85 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-project-title"
@@ -57,11 +75,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="relative w-full max-w-4xl bg-[#10151c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col"
+            data-lenis-prevent="true"
+            className="relative w-full max-w-4xl bg-[#10151c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3.5rem)] flex flex-col my-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header Bar */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0c1015]">
+            {/* Sticky Header Bar */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0c1015] flex-shrink-0 z-10">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono px-2.5 py-1 rounded bg-white/5 text-accent border border-accent/20 uppercase">
                   {project.category}
@@ -69,7 +88,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
                 <span
                   className={`text-xs font-mono px-2 py-0.5 rounded ${
                     project.status === 'Published'
-                      ? 'bg-lime-500/10 text-lime-400 border border-lime-500/20'
+                      ? 'bg-accent/20 text-accent border border-accent/40'
                       : 'bg-white/5 text-gray-400'
                   }`}
                 >
@@ -89,9 +108,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
               </motion.button>
             </div>
 
-            {/* Scrollable Content Body */}
-            <div className="overflow-y-auto p-6 space-y-6 flex-1">
-              {/* Title & Short Bio */}
+            {/* Scrollable Content Body with Guaranteed Viewport Clamping */}
+            <div
+              data-lenis-prevent="true"
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 space-y-6"
+            >
+              {/* Title & Short Summary */}
               <div>
                 <h2 id="modal-project-title" className="text-2xl sm:text-3xl font-extrabold text-white font-display">
                   {project.title}
@@ -101,10 +123,10 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
                 </p>
               </div>
 
-              {/* Media Player / Gallery Section */}
+              {/* Media Player / Gallery / Designed Placeholder Section */}
               <div className="space-y-3">
-                {/* Media Tabs if video is available */}
-                {hasVideo && screenshots.length > 0 && (
+                {/* Media Selector Tabs (when both video and screenshots exist) */}
+                {hasVideo && validScreenshots.length > 0 && (
                   <div className="flex items-center gap-2 border-b border-white/10 pb-2">
                     <button
                       type="button"
@@ -128,13 +150,13 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
                       }`}
                     >
                       <Layers className="w-3.5 h-3.5" />
-                      Screenshots ({screenshots.length})
+                      Screenshots ({validScreenshots.length})
                     </button>
                   </div>
                 )}
 
-                {/* Display Active Media with Crossfade */}
-                <div className="rounded-xl overflow-hidden bg-black/60 border border-white/10 aspect-video relative flex items-center justify-center">
+                {/* Display Media Container */}
+                <div className="rounded-xl overflow-hidden bg-black/60 border border-white/10 aspect-video relative flex items-center justify-center max-h-[46vh]">
                   {activeMediaTab === 'video' && hasVideo ? (
                     youtubeEmbedUrl ? (
                       <iframe
@@ -161,23 +183,30 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
                         </motion.a>
                       </div>
                     )
-                  ) : (
+                  ) : validScreenshots.length > 0 && !imageError ? (
                     <motion.img
                       key={selectedScreenshotIndex}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3 }}
-                      src={screenshots[selectedScreenshotIndex] || project.coverImage}
+                      src={validScreenshots[selectedScreenshotIndex]}
                       alt={`${project.title} screenshot ${selectedScreenshotIndex + 1}`}
-                      className="w-full h-full object-cover"
+                      onError={() => setImageError(true)}
+                      className="w-full h-full object-contain bg-black/40"
+                    />
+                  ) : (
+                    <ProjectPlaceholder
+                      title={project.title}
+                      category={project.category}
+                      className="w-full h-full"
                     />
                   )}
                 </div>
 
-                {/* Screenshot thumbnails selector */}
-                {activeMediaTab === 'screenshots' && screenshots.length > 1 && (
+                {/* Screenshot Thumbnails (when multiple screenshots available) */}
+                {activeMediaTab === 'screenshots' && validScreenshots.length > 1 && !imageError && (
                   <div className="flex items-center gap-2 overflow-x-auto py-2">
-                    {screenshots.map((shot, idx) => (
+                    {validScreenshots.map((shot, idx) => (
                       <motion.button
                         key={idx}
                         type="button"
@@ -203,9 +232,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
                   <ChevronRight className="w-4 h-4" />
                   Technical Systems & Architecture
                 </h3>
-                <p className="text-sm sm:text-base text-gray-300 leading-relaxed whitespace-pre-line bg-white/5 p-4 rounded-xl border border-white/5 font-sans">
+                <div className="text-sm sm:text-base text-gray-300 leading-relaxed whitespace-pre-line bg-white/5 p-4 rounded-xl border border-white/5 font-sans">
                   {project.detailedDescription}
-                </p>
+                </div>
               </div>
 
               {/* Tech Stack Pills */}
@@ -227,8 +256,8 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
               </div>
             </div>
 
-            {/* Footer Actions */}
-            <div className="px-6 py-4 bg-[#0c1015] border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+            {/* Sticky Footer Bar with Actions */}
+            <div className="px-6 py-4 bg-[#0c1015] border-t border-white/10 flex flex-wrap items-center justify-between gap-3 flex-shrink-0 z-10">
               <div className="flex flex-wrap items-center gap-3">
                 {project.googlePlayUrl && (
                   <motion.a
@@ -287,7 +316,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-mono transition-colors"
+                className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-mono transition-colors border border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
               >
                 Close Window [ESC]
               </button>

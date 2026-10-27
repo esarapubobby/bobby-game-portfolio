@@ -87,7 +87,7 @@ export const Hero: React.FC = () => {
       {/* Cinematic Ambient Spotlight & Atmospheric Glow */}
       <Spotlight className="-top-36 left-1/4" />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-accent/15 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-accent/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Grid overlay */}
       <div className="absolute inset-0 bg-subtle-grid pointer-events-none opacity-45 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_80%)]" />

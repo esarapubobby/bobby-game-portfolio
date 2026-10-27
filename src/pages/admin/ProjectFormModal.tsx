@@ -55,7 +55,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
         category: 'Top-Down Zombie Survival Shooter',
         shortDescription: '',
         detailedDescription: '',
-        coverImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+        coverImage: '',
         screenshots: [],
         gameplayVideoUrl: '',
         demoUrl: '',
@@ -294,19 +294,33 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               <div className="space-y-3 p-4 rounded-xl bg-black/30 border border-white/5">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-mono text-gray-300 uppercase">
-                    Cover Image URL
+                    Cover Image URL (Cloudinary or Direct URL)
                   </label>
-                  {formData.coverImage && isValidUrl(formData.coverImage) && (
-                    <a
-                      href={formData.coverImage}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] font-mono text-accent hover:underline flex items-center gap-1"
-                    >
-                      <span>Open image</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {formData.coverImage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({ ...prev, coverImage: '' }));
+                          setCoverImageFailed(false);
+                        }}
+                        className="text-[11px] font-mono text-red-400 hover:text-red-300 transition-colors"
+                      >
+                        Clear Image
+                      </button>
+                    )}
+                    {formData.coverImage && isValidUrl(formData.coverImage) && (
+                      <a
+                        href={formData.coverImage}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-mono text-accent hover:underline flex items-center gap-1"
+                      >
+                        <span>Open image</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
                 </div>
 
                 <input
@@ -316,12 +330,12 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                     setFormData({ ...formData, coverImage: e.target.value });
                     setCoverImageFailed(false);
                   }}
-                  placeholder="https://images.unsplash.com/... or public image URL"
+                  placeholder="Paste Cloudinary URL (e.g. https://res.cloudinary.com/...) or public image URL"
                   className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm focus:border-accent focus:outline-none font-mono"
                 />
 
                 {/* Cover Preview */}
-                {formData.coverImage && (
+                {formData.coverImage ? (
                   <div className="flex items-start gap-4 pt-1">
                     <div className="w-40 h-24 rounded-lg overflow-hidden border border-white/10 bg-black/50 relative flex items-center justify-center flex-shrink-0">
                       {coverImageFailed ? (
@@ -343,9 +357,13 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                       <p className="text-[11px] text-gray-400">
                         {coverImageFailed
                           ? 'Could not load this image URL. Verify that it points to a public, direct image link.'
-                          : 'Card thumbnail loaded successfully.'}
+                          : 'Card thumbnail loaded successfully from provided URL.'}
                       </p>
                     </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
+                    <span>No image URL configured. The card will display the clean styled placeholder.</span>
                   </div>
                 )}
               </div>

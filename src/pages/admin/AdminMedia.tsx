@@ -34,24 +34,13 @@ export const AdminMedia: React.FC = () => {
   // Custom added URLs stored in local reference list
   const [customAssets, setCustomAssets] = useState<AssetUrlItem[]>(() => {
     const saved = localStorage.getItem('bobby_admin_asset_urls');
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: 'asset-deadzone',
-            title: 'Deadzone Game Cover',
-            url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
-            category: 'Image',
-            source: 'Stock / Unsplash',
-          },
-          {
-            id: 'asset-survival',
-            title: 'Survival Island Cover',
-            url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
-            category: 'Image',
-            source: 'Stock / Unsplash',
-          },
-        ];
+    if (saved) {
+      try {
+        const parsed: AssetUrlItem[] = JSON.parse(saved);
+        return parsed.filter((item) => item.url && !item.url.includes('images.unsplash.com'));
+      } catch (e) {}
+    }
+    return [];
   });
 
   const [newTitle, setNewTitle] = useState('');

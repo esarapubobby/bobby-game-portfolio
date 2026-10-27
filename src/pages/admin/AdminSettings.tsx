@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { Palette, CheckCircle2, AlertCircle, Save, Sliders, FileText, ExternalLink, Info, Check } from 'lucide-react';
@@ -21,6 +21,10 @@ export const AdminSettings: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [testedResumeUrl, setTestedResumeUrl] = useState(false);
+
+  useEffect(() => {
+    setFormData({ ...settings });
+  }, [settings]);
 
   const googleDriveId = extractGoogleDriveId(formData.resumeUrl);
   const directDownloadUrl = toGoogleDriveDirectDownload(formData.resumeUrl);

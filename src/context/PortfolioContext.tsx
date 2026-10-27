@@ -67,10 +67,27 @@ const STORAGE_KEYS = {
   MESSAGES: 'bobby_portfolio_messages',
 };
 
+const cleanUnsplashUrls = (list: Project[]): Project[] => {
+  return list.map((p) => {
+    const isUnsplash = (url?: string) => Boolean(url && url.includes('images.unsplash.com'));
+    return {
+      ...p,
+      coverImage: isUnsplash(p.coverImage) ? '' : (p.coverImage || ''),
+      screenshots: (p.screenshots || []).filter((s) => !isUnsplash(s)),
+    };
+  });
+};
+
 export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [projects, setProjects] = useState<Project[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.PROJECTS);
-    return saved ? JSON.parse(saved) : initialProjects;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return cleanUnsplashUrls(parsed);
+      } catch (e) {}
+    }
+    return cleanUnsplashUrls(initialProjects);
   });
 
   const [skills, setSkills] = useState<SkillCategory[]>(() => {
@@ -90,7 +107,16 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const [settings, setSettings] = useState<SiteSettings>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return saved ? JSON.parse(saved) : initialSiteSettings;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.accentColor) {
+          document.documentElement.setAttribute('data-theme', parsed.accentColor);
+        }
+        return parsed;
+      } catch (e) {}
+    }
+    return initialSiteSettings;
   });
 
   const [messages, setMessages] = useState<ContactMessage[]>(() => {
@@ -151,28 +177,32 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (projErr) throw projErr;
 
       if (dbProjects && dbProjects.length > 0) {
-        const mapped: Project[] = dbProjects.map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          category: p.category,
-          shortDescription: p.short_description,
-          detailedDescription: p.detailed_description,
-          coverImage: p.cover_image,
-          screenshots: p.screenshots || [],
-          gameplayVideoUrl: p.gameplay_video_url,
-          demoUrl: p.demo_url,
-          googlePlayUrl: p.google_play_url,
-          itchUrl: p.itch_url,
-          githubUrl: p.github_url,
-          technologies: p.technologies || [],
-          status: p.status,
-          featured: p.featured,
-          published: p.published,
-          sortOrder: p.sort_order,
-          createdAt: p.created_at,
-          updatedAt: p.updated_at,
-        }));
+        const mapped: Project[] = dbProjects.map((p: any) => {
+          const isUnsplash = (url?: string) => Boolean(url && url.includes('images.unsplash.com'));
+          return {
+            id: p.id,
+            title: p.title,
+            category: p.category,
+            shortDescription: p.short_description,
+            detailedDescription: p.detailed_description,
+            coverImage: isUnsplash(p.cover_image) ? '' : (p.cover_image || ''),
+            screenshots: (p.screenshots || []).filter((s: string) => !isUnsplash(s)),
+            gameplayVideoUrl: p.gameplay_video_url,
+            demoUrl: p.demo_url,
+            googlePlayUrl: p.google_play_url,
+            itchUrl: p.itch_url,
+            githubUrl: p.github_url,
+            technologies: p.technologies || [],
+            status: p.status,
+            featured: p.featured,
+            published: p.published,
+            sortOrder: p.sort_order,
+            createdAt: p.created_at,
+            updatedAt: p.updated_at,
+          };
+        });
         setProjects(mapped);
+        localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(mapped));
       }
 
       // Fetch settings
@@ -183,7 +213,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .maybeSingle();
 
       if (dbSettings) {
-        setSettings({
+        const mergedSettings: SiteSettings = {
           id: dbSettings.id,
           heroName: dbSettings.hero_name || initialSiteSettings.heroName,
           heroTitle: dbSettings.hero_title || initialSiteSettings.heroTitle,
@@ -200,7 +230,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           accentColor: (dbSettings.accent_color as any) || initialSiteSettings.accentColor,
           showAvailability: dbSettings.show_availability ?? true,
           footerText: dbSettings.footer_text || initialSiteSettings.footerText,
-        });
+        };
+        setSettings(mergedSettings);
+        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(mergedSettings));
+        if (mergedSettings.accentColor) {
+          document.documentElement.setAttribute('data-theme', mergedSettings.accentColor);
+        }
       }
 
       // Fetch contact messages (Admin role will succeed via RLS)
@@ -248,9 +283,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         category: projectData.category || 'Game Development',
         shortDescription: projectData.shortDescription || '',
         detailedDescription: projectData.detailedDescription || '',
-        coverImage:
-          projectData.coverImage ||
-          'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+        coverImage: projectData.coverImage || '',
         screenshots: projectData.screenshots || [],
         gameplayVideoUrl: projectData.gameplayVideoUrl || '',
         demoUrl: projectData.demoUrl || '',
@@ -447,6 +480,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       const merged = { ...settings, ...newSettings };
       setSettings(merged);
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(merged));
+      if (merged.accentColor) {
+        document.documentElement.setAttribute('data-theme', merged.accentColor);
+      }
 
       if (isSupabaseConfigured) {
         const { error: dbErr } = await supabase.from('site_settings').upsert({

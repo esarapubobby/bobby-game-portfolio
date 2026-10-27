@@ -55,7 +55,7 @@ export const ExperienceSection: React.FC = () => {
           {/* Animated GSAP Laser Beam Foreground */}
           <div
             ref={lineRef}
-            className="absolute left-0 top-2 bottom-4 w-[2px] bg-gradient-to-b from-accent via-lime-400 to-emerald-400 origin-top shadow-[0_0_12px_var(--accent-color,#a3e635)]"
+            className="absolute left-0 top-2 bottom-4 w-[2px] bg-gradient-to-b from-accent via-accent-hover to-accent origin-top shadow-[0_0_12px_var(--accent-color)]"
           />
 
           {experience.map((item, idx) => (

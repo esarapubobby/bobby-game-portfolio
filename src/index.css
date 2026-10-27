@@ -2,22 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root, [data-theme='lime'] {
+  --accent-rgb: 163 230 53;
+  --accent-hover-rgb: 190 242 100;
   --accent-color: #a3e635; /* lime-400 */
   --accent-hover: #bef264; /* lime-300 */
   --accent-glow: rgba(163, 230, 53, 0.25);
   --accent-muted: rgba(163, 230, 53, 0.12);
 }
 
-/* Theme accent variations configured via settings */
-[data-theme='lime'] {
-  --accent-color: #a3e635;
-  --accent-hover: #bef264;
-  --accent-glow: rgba(163, 230, 53, 0.25);
-  --accent-muted: rgba(163, 230, 53, 0.12);
-}
-
 [data-theme='emerald'] {
+  --accent-rgb: 16 185 129;
+  --accent-hover-rgb: 52 211 153;
   --accent-color: #10b981;
   --accent-hover: #34d399;
   --accent-glow: rgba(16, 185, 129, 0.25);
@@ -25,6 +21,8 @@
 }
 
 [data-theme='cyan'] {
+  --accent-rgb: 6 182 212;
+  --accent-hover-rgb: 34 211 238;
   --accent-color: #06b6d4;
   --accent-hover: #22d3ee;
   --accent-glow: rgba(6, 182, 212, 0.25);
@@ -32,6 +30,8 @@
 }
 
 [data-theme='amber'] {
+  --accent-rgb: 245 158 11;
+  --accent-hover-rgb: 251 191 36;
   --accent-color: #f59e0b;
   --accent-hover: #fbbf24;
   --accent-glow: rgba(245, 158, 11, 0.25);
@@ -39,6 +39,8 @@
 }
 
 [data-theme='violet'] {
+  --accent-rgb: 139 92 246;
+  --accent-hover-rgb: 167 139 250;
   --accent-color: #8b5cf6;
   --accent-hover: #a78bfa;
   --accent-glow: rgba(139, 92, 246, 0.25);

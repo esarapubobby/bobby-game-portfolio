@@ -7,11 +7,8 @@ export const initialProjects: Project[] = [
     category: 'Top-Down Zombie Survival Shooter',
     shortDescription: 'A published zombie survival game featuring enemy AI, wave spawning, combat, mobile controls, and UI.',
     detailedDescription: 'Deadzone is an intense top-down zombie survival shooter published on Google Play. Built from the ground up for mobile platforms, it features custom enemy AI state machines with pathfinding, wave-based horde spawning logic, responsive dual-joystick mobile touch controls, weapon swap mechanics, audio feedback, and optimized Android performance for stable framerates even with dozens of active ragdolls and enemy entities.',
-    coverImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
-    screenshots: [
-      'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80'
-    ],
+    coverImage: '',
+    screenshots: [],
     gameplayVideoUrl: 'https://youtu.be/OihvAqWn06w',
     googlePlayUrl: 'https://play.google.com/store/apps/details?id=com.redundantstudios.deadzonegame',
     technologies: ['Unity', 'C#', 'Enemy AI', 'Wave Spawning', 'Mobile Controls', 'Android SDK', 'UI System'],
@@ -26,10 +23,8 @@ export const initialProjects: Project[] = [
     category: '3D Mobile Survival Shooter',
     shortDescription: 'A third-person survival shooter involving combat, resource collection, enemy AI, and mobile controls.',
     detailedDescription: 'Survival Island places the player in an expansive 3D island terrain with dynamic challenges. Key gameplay systems include player inventory management, resource gathering, third-person aiming and shooting mechanics, smart hostile AI patrols, and intuitive on-screen touch controls tailored for mobile gameplay.',
-    coverImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
-    screenshots: [
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80'
-    ],
+    coverImage: '',
+    screenshots: [],
     itchUrl: 'https://bobby-esarapu.itch.io/survival-island',
     technologies: ['Unity', 'C#', '3D Combat', 'Resource Gathering', 'Enemy AI', 'Mobile Controls', 'Terrain'],
     status: 'Completed',
@@ -43,10 +38,8 @@ export const initialProjects: Project[] = [
     category: 'Fast-Paced Mobile Arcade',
     shortDescription: 'An endless runner featuring obstacle spawning, player movement, and score tracking.',
     detailedDescription: 'Engineered with performance as priority, this endless runner utilizes object pooling to continuously spawn and recycle obstacles, tracks, and collectables without runtime garbage collection spikes. Features fluid swipe-based lane switching, jump/slide mechanics, speed scaling, and high-score persistence.',
-    coverImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80',
-    screenshots: [
-      'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80'
-    ],
+    coverImage: '',
+    screenshots: [],
     demoUrl: 'https://l1nk.dev/v7u30x1',
     technologies: ['Unity', 'C#', 'Object Pooling', 'Procedural Spawning', 'Score System', 'Mobile UI'],
     status: 'Completed',
@@ -60,10 +53,8 @@ export const initialProjects: Project[] = [
     category: 'Vehicle Simulation',
     shortDescription: 'A driving simulation featuring vehicle controls and camera systems.',
     detailedDescription: 'A Unity vehicle simulation prototype exploring wheel collider physics, motor torque curves, friction slip dynamics, gear shifts, and smooth lerping third-person chase camera setups with cockpit toggle.',
-    coverImage: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80',
-    screenshots: [
-      'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80'
-    ],
+    coverImage: '',
+    screenshots: [],
     demoUrl: 'https://tinyurl.com/Badri-Driving',
     technologies: ['Unity', 'C#', 'Vehicle Physics', 'Wheel Colliders', 'Camera Controller', 'Input Management'],
     status: 'Prototype',
@@ -77,10 +68,8 @@ export const initialProjects: Project[] = [
     category: '3D Environment Design',
     shortDescription: 'A detailed 3D village environment created using Unity.',
     detailedDescription: 'An atmospheric environment showcasing 3D level layout, asset composition, custom lighting baking, post-processing volume configuration, occlusion culling, and camera walkthrough cinematography inside Unity.',
-    coverImage: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80',
-    screenshots: [
-      'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80'
-    ],
+    coverImage: '',
+    screenshots: [],
     demoUrl: 'https://tinyurl.com/Custom-Built-Village',
     technologies: ['Unity', 'Level Design', 'Lighting & Post-Processing', 'Environment Art', 'Cinemachine'],
     status: 'Completed',

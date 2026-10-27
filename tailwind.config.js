@@ -17,11 +17,11 @@ export default {
         border: {
           DEFAULT: 'rgba(255, 255, 255, 0.08)',
           strong: 'rgba(255, 255, 255, 0.16)',
-          accent: 'rgba(163, 230, 53, 0.3)',
+          accent: 'rgb(var(--accent-rgb, 163 230 53) / 0.3)',
         },
         accent: {
-          DEFAULT: 'var(--accent-color, #a3e635)',
-          hover: 'var(--accent-hover, #bef264)',
+          DEFAULT: 'rgb(var(--accent-rgb, 163 230 53) / <alpha-value>)',
+          hover: 'rgb(var(--accent-hover-rgb, 190 242 100) / <alpha-value>)',
           glow: 'var(--accent-glow, rgba(163, 230, 53, 0.25))',
           muted: 'var(--accent-muted, rgba(163, 230, 53, 0.15))',
         },

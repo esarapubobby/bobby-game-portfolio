@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Smartphone, Gamepad2, ChevronRight, ExternalLink } from 'lucide-react';
 import { Project } from '../../types';
 import { SpotlightCard } from '../ui/SpotlightCard';
+import { ProjectPlaceholder } from '../ui/ProjectPlaceholder';
 import { ICON_BUTTON_INTERACTIONS } from '../../lib/animations';
 
 interface ProjectCardProps {
@@ -11,12 +12,16 @@ interface ProjectCardProps {
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) => {
+  const [imgError, setImgError] = useState(false);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       onSelect(project);
     }
   };
+
+  const hasValidImage = Boolean(project.coverImage && !imgError);
 
   return (
     <motion.div
@@ -37,17 +42,24 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
           aria-label={`Inspect ${project.title}`}
           className="relative aspect-video w-full overflow-hidden bg-black/50 cursor-pointer focus:outline-none"
         >
-          <motion.img
-            src={project.coverImage}
-            alt={project.title}
-            loading="lazy"
-            whileHover={{ scale: 1.07 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full h-full object-cover"
-          />
+          {hasValidImage ? (
+            <motion.img
+              src={project.coverImage}
+              alt={project.title}
+              loading="lazy"
+              onError={() => setImgError(true)}
+              whileHover={{ scale: 1.07 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <ProjectPlaceholder title={project.title} category={project.category} className="w-full h-full" />
+          )}
 
-          {/* Vignette Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#111720] via-transparent to-black/40 opacity-90 pointer-events-none" />
+          {/* Vignette Overlay (only if image present) */}
+          {hasValidImage && (
+            <div className="absolute inset-0 bg-gradient-to-t from-[#111720] via-transparent to-black/40 opacity-90 pointer-events-none" />
+          )}
 
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
@@ -57,7 +69,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
             <span
               className={`text-[11px] font-mono px-2 py-0.5 rounded backdrop-blur-md ${
                 project.status === 'Published'
-                  ? 'bg-lime-500/20 text-lime-300 border border-lime-500/40'
+                  ? 'bg-accent/20 text-accent border border-accent/40'
                   : 'bg-black/70 text-gray-300 border border-white/10'
               }`}
             >
