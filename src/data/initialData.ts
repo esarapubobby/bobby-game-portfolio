@@ -1,0 +1,211 @@
+import { Project, SkillCategory, ExperienceItem, EducationItem, SiteSettings } from '../types';
+
+export const initialProjects: Project[] = [
+  {
+    id: 'deadzone',
+    title: 'DEADZONE',
+    category: 'Top-Down Zombie Survival Shooter',
+    shortDescription: 'A published zombie survival game featuring enemy AI, wave spawning, combat, mobile controls, and UI.',
+    detailedDescription: 'Deadzone is an intense top-down zombie survival shooter published on Google Play. Built from the ground up for mobile platforms, it features custom enemy AI state machines with pathfinding, wave-based horde spawning logic, responsive dual-joystick mobile touch controls, weapon swap mechanics, audio feedback, and optimized Android performance for stable framerates even with dozens of active ragdolls and enemy entities.',
+    coverImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+    screenshots: [
+      'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80'
+    ],
+    gameplayVideoUrl: 'https://youtu.be/OihvAqWn06w',
+    googlePlayUrl: 'https://play.google.com/store/apps/details?id=com.redundantstudios.deadzonegame',
+    technologies: ['Unity', 'C#', 'Enemy AI', 'Wave Spawning', 'Mobile Controls', 'Android SDK', 'UI System'],
+    status: 'Published',
+    featured: true,
+    published: true,
+    sortOrder: 1,
+  },
+  {
+    id: 'survival-island',
+    title: 'SURVIVAL ISLAND',
+    category: '3D Mobile Survival Shooter',
+    shortDescription: 'A third-person survival shooter involving combat, resource collection, enemy AI, and mobile controls.',
+    detailedDescription: 'Survival Island places the player in an expansive 3D island terrain with dynamic challenges. Key gameplay systems include player inventory management, resource gathering, third-person aiming and shooting mechanics, smart hostile AI patrols, and intuitive on-screen touch controls tailored for mobile gameplay.',
+    coverImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
+    screenshots: [
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80'
+    ],
+    itchUrl: 'https://bobby-esarapu.itch.io/survival-island',
+    technologies: ['Unity', 'C#', '3D Combat', 'Resource Gathering', 'Enemy AI', 'Mobile Controls', 'Terrain'],
+    status: 'Completed',
+    featured: true,
+    published: true,
+    sortOrder: 2,
+  },
+  {
+    id: 'endless-runner-game',
+    title: 'ENDLESS RUNNER GAME',
+    category: 'Fast-Paced Mobile Arcade',
+    shortDescription: 'An endless runner featuring obstacle spawning, player movement, and score tracking.',
+    detailedDescription: 'Engineered with performance as priority, this endless runner utilizes object pooling to continuously spawn and recycle obstacles, tracks, and collectables without runtime garbage collection spikes. Features fluid swipe-based lane switching, jump/slide mechanics, speed scaling, and high-score persistence.',
+    coverImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80',
+    screenshots: [
+      'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80'
+    ],
+    demoUrl: 'https://l1nk.dev/v7u30x1',
+    technologies: ['Unity', 'C#', 'Object Pooling', 'Procedural Spawning', 'Score System', 'Mobile UI'],
+    status: 'Completed',
+    featured: true,
+    published: true,
+    sortOrder: 3,
+  },
+  {
+    id: 'badri-driving',
+    title: 'BADRI DRIVING',
+    category: 'Vehicle Simulation',
+    shortDescription: 'A driving simulation featuring vehicle controls and camera systems.',
+    detailedDescription: 'A Unity vehicle simulation prototype exploring wheel collider physics, motor torque curves, friction slip dynamics, gear shifts, and smooth lerping third-person chase camera setups with cockpit toggle.',
+    coverImage: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80',
+    screenshots: [
+      'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80'
+    ],
+    demoUrl: 'https://tinyurl.com/Badri-Driving',
+    technologies: ['Unity', 'C#', 'Vehicle Physics', 'Wheel Colliders', 'Camera Controller', 'Input Management'],
+    status: 'Prototype',
+    featured: false,
+    published: true,
+    sortOrder: 4,
+  },
+  {
+    id: 'custom-built-village',
+    title: 'CUSTOM-BUILT VILLAGE',
+    category: '3D Environment Design',
+    shortDescription: 'A detailed 3D village environment created using Unity.',
+    detailedDescription: 'An atmospheric environment showcasing 3D level layout, asset composition, custom lighting baking, post-processing volume configuration, occlusion culling, and camera walkthrough cinematography inside Unity.',
+    coverImage: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80',
+    screenshots: [
+      'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80'
+    ],
+    demoUrl: 'https://tinyurl.com/Custom-Built-Village',
+    technologies: ['Unity', 'Level Design', 'Lighting & Post-Processing', 'Environment Art', 'Cinemachine'],
+    status: 'Completed',
+    featured: false,
+    published: true,
+    sortOrder: 5,
+  },
+];
+
+export const initialSkillCategories: SkillCategory[] = [
+  {
+    id: 'cat-game-dev',
+    name: 'Game Development',
+    description: 'Core engine architecture, gameplay systems, and mobile deployment.',
+    sortOrder: 1,
+    skills: [
+      { id: 'g1', name: 'Unity Engine', highlight: true },
+      { id: 'g2', name: 'Gameplay Programming', highlight: true },
+      { id: 'g3', name: 'Enemy AI & State Machines', highlight: true },
+      { id: 'g4', name: 'Animation & Mecanim', highlight: false },
+      { id: 'g5', name: 'UI / Canvas Architecture', highlight: false },
+      { id: 'g6', name: 'Mobile Controls (Touch/Joystick)', highlight: true },
+      { id: 'g7', name: 'Object Pooling & Optimization', highlight: true },
+    ],
+  },
+  {
+    id: 'cat-programming',
+    name: 'Programming Languages',
+    description: 'Object-oriented programming, game scripts, and web fundamentals.',
+    sortOrder: 2,
+    skills: [
+      { id: 'p1', name: 'C#', highlight: true },
+      { id: 'p2', name: 'C', highlight: false },
+      { id: 'p3', name: 'Python', highlight: false },
+      { id: 'p4', name: 'HTML5', highlight: false },
+      { id: 'p5', name: 'CSS3', highlight: false },
+      { id: 'p6', name: 'JavaScript', highlight: false },
+    ],
+  },
+  {
+    id: 'cat-tools',
+    name: 'Tools & Workflows',
+    description: 'Integrated development environments, version control, and design.',
+    sortOrder: 3,
+    skills: [
+      { id: 't1', name: 'Visual Studio', highlight: false },
+      { id: 't2', name: 'VS Code', highlight: false },
+      { id: 't3', name: 'Git', highlight: true },
+      { id: 't4', name: 'GitHub', highlight: true },
+      { id: 't5', name: 'Figma', highlight: false },
+    ],
+  },
+  {
+    id: 'cat-core',
+    name: 'Core Concepts',
+    description: 'Software engineering principles and target platform expertise.',
+    sortOrder: 4,
+    skills: [
+      { id: 'c1', name: 'Object-Oriented Programming (OOP)', highlight: true },
+      { id: 'c2', name: 'Debugging & Profiling', highlight: true },
+      { id: 'c3', name: 'Problem Solving & Logic', highlight: true },
+      { id: 'c4', name: 'Android Game Development & SDK', highlight: true },
+    ],
+  },
+];
+
+export const initialExperience: ExperienceItem[] = [
+  {
+    id: 'exp-redundant-studios',
+    company: 'Redundant Studios',
+    role: 'Game Developer',
+    duration: 'Active Member',
+    location: 'Remote',
+    description: 'Collaborated with a three-member indie game development team to develop, test, optimize, and publish Unity games targeting Android devices. Focused on core gameplay mechanics, mobile joystick input, enemy wave AI, and build pipeline to Google Play.',
+    achievements: [
+      'Published DEADZONE on Google Play Store with full gameplay loop, combat, and touch controls.',
+      'Implemented optimized object pooling and physics layers for consistent Android framerates.',
+      'Designed responsive UI scaling and audio management across diverse Android device resolutions.',
+    ],
+    technologies: ['Unity', 'C#', 'Android SDK', 'Google Play Console', 'Git'],
+    sortOrder: 1,
+  },
+  {
+    id: 'exp-allreal-labs',
+    company: 'AllReal Labs',
+    role: 'Intern',
+    duration: 'June 2026 – July 2026',
+    location: 'India',
+    description: 'Completed an internship and gained practical industry experience through assigned technical tasks and professional engineering practices.',
+    achievements: [
+      'Applied software development fundamentals to assigned engineering objectives.',
+      'Collaborated within structured technical workflows and source control best practices.',
+    ],
+    technologies: ['Software Engineering', 'Technical Problem Solving', 'Git'],
+    sortOrder: 2,
+  },
+];
+
+export const initialEducation: EducationItem[] = [
+  {
+    id: 'edu-sasi',
+    institution: 'Sasi Institute of Technology and Engineering',
+    degree: 'B.Tech',
+    field: 'Electronics and Communication Technology',
+    duration: '2023 – 2027',
+    location: 'Tadepalligudem, Andhra Pradesh, India',
+    details: 'Focusing on core engineering concepts, computational logic, microcontrollers, embedded systems, and applied software engineering alongside game development.',
+    sortOrder: 1,
+  },
+];
+
+export const initialSiteSettings: SiteSettings = {
+  heroName: 'BOBBY ESARAPU',
+  heroTitle: 'UNITY GAME DEVELOPER',
+  heroQuote: 'Building immersive gameplay experiences, one system at a time.',
+  heroAvailabilityText: 'Open for Game Dev Roles & Indie Collaborations',
+  aboutBioP1: 'I am a Unity Game Developer and B.Tech student in Electronics and Communication Technology at Sasi Institute of Technology and Engineering (2023–2027), based in Tadepalligudem, Andhra Pradesh. My passion lies in crafting responsive, mechanically deep gameplay experiences from concept to publication.',
+  aboutBioP2: 'As a member of the three-person team at Redundant Studios, I specialize in C# gameplay programming, state machine enemy AI, mobile controls, and Android optimization. Having brought projects like DEADZONE from prototype to Google Play, I prioritize writing clean, maintainable systems that turn creative ideas into playable reality.',
+  aboutLocation: 'Tadepalligudem, Andhra Pradesh, India',
+  contactEmail: 'esarapubobby@gmail.com',
+  githubUrl: 'https://github.com/esarapubobby',
+  linkedinUrl: 'https://linkedin.com/in/bobby-esarapu-68543230',
+  itchUrl: 'https://bobby-esarapu.itch.io',
+  resumeUrl: '/Bobby_Esarapu_Resume.pdf',
+  accentColor: 'lime',
+  showAvailability: true,
+  footerText: '© Bobby Esarapu. Built for high-performance gameplay systems & web experience.',
+};
