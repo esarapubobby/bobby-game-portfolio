@@ -5,72 +5,22 @@ import { ProjectCard } from './ProjectCard';
 import { ProjectModal } from './ProjectModal';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { Project } from '../../types';
-import { Filter, AlertCircle, RefreshCw } from 'lucide-react';
-import { TRANSITIONS } from '../../lib/animations';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export const FeaturedProjects: React.FC = () => {
   const { projects, loading, error, refreshData } = usePortfolio();
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [activeModalProject, setActiveModalProject] = useState<Project | null>(null);
 
-  // Filter only published projects for public viewers
+  // Display all published projects directly
   const publishedProjects = useMemo(() => {
     return projects.filter((p) => p.published !== false);
   }, [projects]);
 
-  // Extract unique categories
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    publishedProjects.forEach((p) => {
-      if (p.category) set.add(p.category);
-    });
-    return ['All', ...Array.from(set)];
-  }, [publishedProjects]);
-
-  const filteredProjects = useMemo(() => {
-    if (selectedCategory === 'All') return publishedProjects;
-    return publishedProjects.filter((p) => p.category === selectedCategory);
-  }, [publishedProjects, selectedCategory]);
-
   return (
     <section id="projects" className="py-24 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
-          <SectionHeading
-            index="01"
-            title="Featured Projects"
-            subtitle="Published games, prototypes, and technical gameplay systems built with Unity and C#."
-          />
-
-          {/* Category Filter Pills with Animated Selection Slider */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none bg-[#111720]/80 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md">
-            <span className="text-xs font-mono text-gray-400 px-2 flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-accent" /> Filter:
-            </span>
-            {categories.map((cat) => {
-              const isSelected = selectedCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`relative px-3.5 py-1.5 rounded-xl text-xs font-mono transition-colors whitespace-nowrap focus:outline-none ${
-                    isSelected ? 'text-black font-bold' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {isSelected && (
-                    <motion.span
-                      layoutId="activeFilterPill"
-                      className="absolute inset-0 rounded-xl bg-accent shadow-sm"
-                      transition={TRANSITIONS.snappy}
-                      aria-hidden="true"
-                    />
-                  )}
-                  <span className="relative z-10">{cat}</span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="mb-10">
+          <SectionHeading title="Featured Projects" />
         </div>
 
         {/* Loading State */}
@@ -97,27 +47,20 @@ export const FeaturedProjects: React.FC = () => {
         )}
 
         {/* Empty State */}
-        {!loading && filteredProjects.length === 0 && (
+        {!loading && publishedProjects.length === 0 && (
           <div className="py-20 text-center rounded-2xl bg-white/5 border border-white/5 p-8">
-            <p className="text-base text-gray-400 font-mono">No projects found for the selected category.</p>
-            <button
-              type="button"
-              onClick={() => setSelectedCategory('All')}
-              className="mt-4 px-4 py-2 rounded-lg bg-accent text-black text-xs font-mono font-bold"
-            >
-              Reset Filters
-            </button>
+            <p className="text-base text-gray-400 font-mono">No published projects available at this moment.</p>
           </div>
         )}
 
-        {/* Smooth Animated Project Cards Grid */}
-        {!loading && filteredProjects.length > 0 && (
+        {/* Project Cards Grid */}
+        {!loading && publishedProjects.length > 0 && (
           <motion.div
             layout
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
           >
             <AnimatePresence mode="popLayout">
-              {filteredProjects.map((project) => (
+              {publishedProjects.map((project) => (
                 <ProjectCard
                   key={project.id}
                   project={project}
@@ -129,7 +72,7 @@ export const FeaturedProjects: React.FC = () => {
         )}
       </div>
 
-      {/* Accessible Detail Modal with Smooth Backdrop & Spring Scale */}
+      {/* Accessible Detail Modal */}
       <ProjectModal
         project={activeModalProject}
         onClose={() => setActiveModalProject(null)}

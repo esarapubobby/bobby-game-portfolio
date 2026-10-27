@@ -24,11 +24,7 @@ export const SkillsSection: React.FC = () => {
   return (
     <section id="skills" className="py-24 relative bg-[#0c1015]/60 border-y border-white/5 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          index="02"
-          title="Technical Competencies"
-          subtitle="Engine specialization, programming languages, production tools, and core software engineering fundamentals."
-        />
+        <SectionHeading title="Technical Competencies" />
 
         <motion.div
           variants={VARIANTS.staggerContainer(0.1, 0.05)}

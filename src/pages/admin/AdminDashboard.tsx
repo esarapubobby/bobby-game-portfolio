@@ -140,15 +140,15 @@ export const AdminDashboard: React.FC = () => {
 
           <motion.div {...BUTTON_INTERACTIONS}>
             <Link
-              to="/admin/media"
+              to="/admin/settings"
               className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-accent hover:bg-accent/10 transition-colors flex items-center gap-3 group h-full block"
             >
               <div className="p-2.5 rounded-lg bg-accent/20 text-accent group-hover:bg-accent group-hover:text-black transition-colors">
                 <FileDown className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-sm font-semibold text-white block">Update Resume</span>
-                <span className="text-[11px] font-mono text-gray-400">Upload replacement PDF</span>
+                <span className="text-sm font-semibold text-white block">Update Resume Link</span>
+                <span className="text-[11px] font-mono text-gray-400">Configure Google Drive URL</span>
               </div>
             </Link>
           </motion.div>

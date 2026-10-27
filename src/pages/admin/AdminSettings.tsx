@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { Palette, CheckCircle2, AlertCircle, Save, Sliders, FileText } from 'lucide-react';
-import { uploadFileToStorage, BUCKET_DOCUMENTS, isSupabaseConfigured } from '../../lib/supabase';
+import { Palette, CheckCircle2, AlertCircle, Save, Sliders, FileText, ExternalLink, Info, Check } from 'lucide-react';
 import { BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
+import { extractGoogleDriveId, toGoogleDriveDirectDownload, isValidUrl } from '../../lib/urls';
 
 const ACCENT_OPTIONS = [
   { id: 'lime', name: 'Neon Lime (Default)', color: '#a3e635' },
@@ -20,48 +20,22 @@ export const AdminSettings: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [uploadingResume, setUploadingResume] = useState(false);
+  const [testedResumeUrl, setTestedResumeUrl] = useState(false);
 
-  // Resume PDF upload handler
-  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== 'application/pdf') {
-      setErrorMsg('Resume file must be in PDF format.');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setErrorMsg('Resume file size must be under 10MB.');
-      return;
-    }
-
-    setUploadingResume(true);
-    setErrorMsg(null);
-
-    if (isSupabaseConfigured) {
-      const path = `Bobby_Esarapu_Resume_${Date.now()}.pdf`;
-      const { url, error } = await uploadFileToStorage(BUCKET_DOCUMENTS, path, file);
-      setUploadingResume(false);
-
-      if (error || !url) {
-        setErrorMsg(error?.message || 'Failed to upload resume to Supabase Storage.');
-      } else {
-        setFormData((prev) => ({ ...prev, resumeUrl: url }));
-      }
-    } else {
-      // Local fallback: update path reference
-      setFormData((prev) => ({ ...prev, resumeUrl: `/Bobby_Esarapu_Resume.pdf` }));
-      setUploadingResume(false);
-    }
-  };
+  const googleDriveId = extractGoogleDriveId(formData.resumeUrl);
+  const directDownloadUrl = toGoogleDriveDirectDownload(formData.resumeUrl);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setErrorMsg(null);
     setSuccess(false);
+
+    if (formData.resumeUrl && !isValidUrl(formData.resumeUrl)) {
+      setErrorMsg('Please enter a valid HTTP/HTTPS URL or local path for the resume.');
+      setSaving(false);
+      return;
+    }
 
     const res = await updateSettings(formData);
     setSaving(false);
@@ -74,6 +48,12 @@ export const AdminSettings: React.FC = () => {
     }
   };
 
+  const handleTestResume = () => {
+    if (!formData.resumeUrl) return;
+    window.open(formData.resumeUrl, '_blank', 'noopener,noreferrer');
+    setTestedResumeUrl(true);
+  };
+
   return (
     <div className="space-y-8 animate-fadeIn max-w-4xl">
       <div>
@@ -81,7 +61,7 @@ export const AdminSettings: React.FC = () => {
           Website Settings & Customization
         </h1>
         <p className="text-xs sm:text-sm text-gray-400 font-mono mt-1">
-          Customize theme colors, hero copy, social links, and public resume document.
+          Customize theme colors, hero copy, social channels, and public resume link via URLs.
         </p>
       </div>
 
@@ -95,7 +75,7 @@ export const AdminSettings: React.FC = () => {
             className="p-4 rounded-xl bg-lime-950/40 border border-lime-500/40 flex items-center gap-3 text-xs sm:text-sm text-lime-200 overflow-hidden"
           >
             <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-            <span>Settings successfully synchronized and persisted.</span>
+            <span>Settings successfully saved and persisted to database. Changes are live on the portfolio.</span>
           </motion.div>
         )}
 
@@ -123,7 +103,7 @@ export const AdminSettings: React.FC = () => {
             </h2>
           </div>
           <p className="text-xs text-gray-400 font-mono">
-            Select a restrained neon or editorial accent for buttons, borders, and glows.
+            Select an accent color for buttons, laser beams, borders, and glows.
           </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
@@ -233,6 +213,93 @@ export const AdminSettings: React.FC = () => {
           </div>
         </div>
 
+        {/* Resume Google Drive Link Configuration */}
+        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-accent" />
+              <h2 className="font-bold text-white text-base font-display">
+                Resume Document (Google Drive Share Link)
+              </h2>
+            </div>
+            {formData.resumeUrl && (
+              <div className="flex items-center gap-3">
+                {testedResumeUrl && (
+                  <span className="text-[11px] font-mono text-lime-400 flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Link opened in new tab</span>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleTestResume}
+                  className="text-xs font-mono text-accent hover:underline flex items-center gap-1.5"
+                >
+                  <span>Test / Open Link</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-400 font-mono">
+            Enter your resume's Google Drive sharing link or public document URL. File uploads are disabled in favor of direct external links.
+          </p>
+
+          <div className="space-y-3">
+            <input
+              type="text"
+              value={formData.resumeUrl}
+              onChange={(e) => {
+                setFormData({ ...formData, resumeUrl: e.target.value });
+                setTestedResumeUrl(false);
+              }}
+              placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm font-mono focus:border-accent focus:outline-none"
+            />
+
+            {/* Google Drive Status & Direct Download Conversion */}
+            {googleDriveId ? (
+              <div className="p-3.5 rounded-xl bg-lime-950/30 border border-lime-500/30 space-y-2 text-xs font-mono">
+                <div className="flex items-center gap-2 text-lime-400 font-semibold">
+                  <Check className="w-4 h-4" />
+                  <span>Valid Google Drive file link detected</span>
+                </div>
+                <div className="text-gray-300 space-y-1">
+                  <p className="text-[11px] text-gray-400">
+                    <span className="text-gray-400">Google Drive File ID: </span>
+                    <span className="text-accent">{googleDriveId}</span>
+                  </p>
+                  <p className="text-[11px] text-gray-400 truncate">
+                    <span className="text-gray-400">Converted Direct Download URL: </span>
+                    <span className="text-accent">{directDownloadUrl}</span>
+                  </p>
+                </div>
+                <p className="text-[11px] text-gray-400 pt-1 border-t border-white/5">
+                  The hero "Download Resume" button will automatically route visitors to this direct-download URL.
+                </p>
+              </div>
+            ) : (
+              formData.resumeUrl && (
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-xs font-mono text-gray-300">
+                  <span>Custom URL configured: {formData.resumeUrl}</span>
+                </div>
+              )
+            )}
+
+            {/* Access Permission Requirement Notice */}
+            <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs font-mono text-amber-200/90 flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-amber-300">Google Drive Permission Requirement:</p>
+                <p className="text-[11px] leading-relaxed text-amber-200/80">
+                  Ensure the file in Google Drive has General Access set to <strong className="text-white">"Anyone with the link"</strong> with Viewer access. If left on "Restricted", public visitors will receive an access-denied error from Google.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* About Bio Section */}
         <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
           <h2 className="font-bold text-white text-base font-display">
@@ -333,43 +400,6 @@ export const AdminSettings: React.FC = () => {
                 className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm font-mono"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Resume PDF Configuration */}
-        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-accent" />
-            <h2 className="font-bold text-white text-base font-display">
-              Resume Document
-            </h2>
-          </div>
-          <p className="text-xs text-gray-400 font-mono">
-            Provide the direct URL to your published resume or upload a replacement PDF.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <input
-              type="text"
-              value={formData.resumeUrl}
-              onChange={(e) => setFormData({ ...formData, resumeUrl: e.target.value })}
-              className="flex-1 w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm font-mono"
-            />
-
-            <motion.label
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-mono text-white cursor-pointer transition-colors flex-shrink-0"
-            >
-              <span>{uploadingResume ? 'Uploading PDF...' : 'Upload Replacement PDF'}</span>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={handleResumeUpload}
-                disabled={uploadingResume}
-                className="hidden"
-              />
-            </motion.label>
           </div>
         </div>
 

@@ -1,13 +1,14 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Gamepad2, FileDown, Github, Linkedin, ArrowDown, Sparkles, MapPin, Terminal } from 'lucide-react';
+import { Gamepad2, FileDown, Github, Linkedin, ArrowDown, MapPin } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { DecryptedText } from '../ui/DecryptedText';
 import { Spotlight } from '../ui/Spotlight';
 import { GameScene3D } from '../ui/GameScene3D';
 import { BUTTON_INTERACTIONS, ICON_BUTTON_INTERACTIONS } from '../../lib/animations';
 import { getLenis } from '../../lib/lenis';
+import { toGoogleDriveDirectDownload } from '../../lib/urls';
 
 export const Hero: React.FC = () => {
   const { settings } = usePortfolio();
@@ -28,16 +29,10 @@ export const Hero: React.FC = () => {
         { opacity: 1, y: 0, scale: 1, duration: 0.6 }
       )
         .fromTo(
-          '.hero-title-divider',
-          { scaleX: 0 },
-          { scaleX: 1, duration: 0.7, ease: 'expo.out' },
-          '-=0.3'
-        )
-        .fromTo(
           '.hero-subtitle',
           { opacity: 0, y: 15, letterSpacing: '0.05em' },
           { opacity: 1, y: 0, letterSpacing: '0.18em', duration: 0.8 },
-          '-=0.5'
+          '-=0.3'
         )
         .fromTo(
           '.hero-quote',
@@ -81,6 +76,8 @@ export const Hero: React.FC = () => {
     }
   };
 
+  const resumeDownloadHref = toGoogleDriveDirectDownload(settings.resumeUrl) || '/Bobby_Esarapu_Resume.pdf';
+
   return (
     <section
       ref={heroContainerRef}
@@ -122,9 +119,8 @@ export const Hero: React.FC = () => {
                 />
               </h1>
 
-              {/* Professional Title with Dividing Neon Line */}
-              <div className="mt-3 flex items-center justify-center lg:justify-start gap-3">
-                <div className="hero-title-divider h-[2px] w-12 bg-accent origin-left" />
+              {/* Professional Title */}
+              <div className="mt-3 flex items-center justify-center lg:justify-start">
                 <h2 className="hero-subtitle text-base sm:text-xl md:text-2xl font-bold tracking-widest text-accent font-mono uppercase">
                   {settings.heroTitle || 'UNITY GAME DEVELOPER'}
                 </h2>
@@ -141,10 +137,6 @@ export const Hero: React.FC = () => {
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-accent/40 hover:bg-white/10 transition-colors cursor-default">
                 <Gamepad2 className="w-3.5 h-3.5 text-accent" />
                 Redundant Studios Member
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-accent/40 hover:bg-white/10 transition-colors cursor-default">
-                <Sparkles className="w-3.5 h-3.5 text-accent" />
-                C# Gameplay & Enemy AI
               </span>
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-accent/40 hover:bg-white/10 transition-colors cursor-default">
                 <MapPin className="w-3.5 h-3.5 text-accent" />
@@ -165,8 +157,7 @@ export const Hero: React.FC = () => {
               </motion.a>
 
               <motion.a
-                href={settings.resumeUrl || '/Bobby_Esarapu_Resume.pdf'}
-                download
+                href={resumeDownloadHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 {...BUTTON_INTERACTIONS}
@@ -210,12 +201,6 @@ export const Hero: React.FC = () => {
 
               {/* Three.js Interactive 3D Canvas */}
               <GameScene3D className="w-full h-full relative z-10" />
-
-              {/* Engine Spec HUD Footer badge */}
-              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[#111720]/90 border border-white/10 text-[10px] font-mono text-gray-400 backdrop-blur-md flex items-center gap-2 whitespace-nowrap z-20">
-                <Terminal className="w-3 h-3 text-accent" />
-                <span>Interact: Move pointer to rotate</span>
-              </div>
             </div>
           </div>
         </div>

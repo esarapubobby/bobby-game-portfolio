@@ -10,11 +10,7 @@ export const EducationSection: React.FC = () => {
   return (
     <section id="education" className="py-20 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          index="05"
-          title="Education"
-          subtitle="Formal academic curriculum and engineering studies."
-        />
+        <SectionHeading title="Education" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {education.map((item, idx) => (

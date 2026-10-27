@@ -52,7 +52,7 @@ export const AdminLayout: React.FC = () => {
     { name: 'Education', path: '/admin/education', icon: GraduationCap },
     { name: 'Site Customization', path: '/admin/settings', icon: Settings },
     { name: 'Contact Messages', path: '/admin/messages', icon: Mail },
-    { name: 'Media & Storage', path: '/admin/media', icon: FileImage },
+    { name: 'Media & Asset URLs', path: '/admin/media', icon: FileImage },
   ];
 
   const handleSignOut = async () => {

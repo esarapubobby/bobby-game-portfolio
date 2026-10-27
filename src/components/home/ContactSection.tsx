@@ -45,11 +45,7 @@ export const ContactSection: React.FC = () => {
   return (
     <section id="contact" className="py-24 relative bg-[#0c1015]/60 border-t border-white/5 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          index="06"
-          title="Get In Touch"
-          subtitle="Interested in collaborating on a game, hiring for Unity gameplay roles, or discussing systems architecture?"
-        />
+        <SectionHeading title="Get In Touch" />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Direct Contact Information Column */}

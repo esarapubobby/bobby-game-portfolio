@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, FileDown, Terminal, Gamepad2 } from 'lucide-react';
+import { Menu, X, Terminal, Gamepad2 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
+import { TRANSITIONS } from '../../lib/animations';
 import { getLenis } from '../../lib/lenis';
 
 export const Navbar: React.FC = () => {
@@ -132,36 +132,8 @@ export const Navbar: React.FC = () => {
             })}
           </nav>
 
-          {/* Actions: Resume button */}
-          <div className="hidden md:flex items-center gap-4">
-            <motion.a
-              href={settings.resumeUrl || '/Bobby_Esarapu_Resume.pdf'}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
-              {...BUTTON_INTERACTIONS}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-black bg-accent hover:bg-accent-hover rounded-lg transition-colors shadow-sm hover:shadow-accent/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent focus:ring-offset-background"
-            >
-              <FileDown className="w-4 h-4" />
-              <span>Resume</span>
-            </motion.a>
-          </div>
-
           {/* Mobile Menu Button */}
-          <div className="flex items-center gap-2.5 md:hidden">
-            <motion.a
-              href={settings.resumeUrl || '/Bobby_Esarapu_Resume.pdf'}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
-              whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-black bg-accent rounded-lg"
-              aria-label="Download Resume"
-            >
-              <FileDown className="w-3.5 h-3.5" />
-              <span>Resume</span>
-            </motion.a>
-
+          <div className="flex items-center md:hidden">
             <motion.button
               type="button"
               whileTap={{ scale: 0.92 }}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Project, ProjectStatus } from '../../types';
-import { X, Upload, Plus, Trash2, AlertCircle } from 'lucide-react';
-import { uploadFileToStorage, BUCKET_PROJECT_MEDIA, isSupabaseConfigured } from '../../lib/supabase';
+import { X, Plus, Trash2, AlertCircle, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { VARIANTS, BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
+import { isValidUrl } from '../../lib/urls';
 
 interface ProjectFormModalProps {
   isOpen: boolean;
@@ -39,8 +39,9 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
 
   const [techInput, setTechInput] = useState('');
   const [newScreenshotUrl, setNewScreenshotUrl] = useState('');
-  const [uploadingCover, setUploadingCover] = useState(false);
-  const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
+  const [screenshotUrlError, setScreenshotUrlError] = useState<string | null>(null);
+  const [coverImageFailed, setCoverImageFailed] = useState(false);
+  const [failedScreenshots, setFailedScreenshots] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -69,91 +70,38 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
       });
       setTechInput('Unity, C#, Enemy AI, Mobile Controls');
     }
+    setCoverImageFailed(false);
+    setFailedScreenshots({});
+    setScreenshotUrlError(null);
     setErrorMessage(null);
   }, [initialData, isOpen]);
 
-  // Handle Cover Image Upload
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setErrorMessage('Please choose a valid image file (PNG, JPG, WEBP).');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage('Image size should be below 5MB.');
-      return;
-    }
-
-    setUploadingCover(true);
-    setErrorMessage(null);
-
-    if (isSupabaseConfigured) {
-      const path = `cover-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const { url, error } = await uploadFileToStorage(BUCKET_PROJECT_MEDIA, path, file);
-      setUploadingCover(false);
-      if (error || !url) {
-        setErrorMessage(error?.message || 'Failed to upload cover image.');
-      } else {
-        setFormData((prev) => ({ ...prev, coverImage: url }));
-      }
-    } else {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setFormData((prev) => ({ ...prev, coverImage: event.target?.result as string }));
-        setUploadingCover(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Handle Screenshot Upload
-  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setErrorMessage('Please choose a valid image file.');
-      return;
-    }
-
-    setUploadingScreenshot(true);
-    setErrorMessage(null);
-
-    if (isSupabaseConfigured) {
-      const path = `shot-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const { url, error } = await uploadFileToStorage(BUCKET_PROJECT_MEDIA, path, file);
-      setUploadingScreenshot(false);
-      if (error || !url) {
-        setErrorMessage(error?.message || 'Failed to upload screenshot.');
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          screenshots: [...(prev.screenshots || []), url],
-        }));
-      }
-    } else {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setFormData((prev) => ({
-          ...prev,
-          screenshots: [...(prev.screenshots || []), event.target?.result as string],
-        }));
-        setUploadingScreenshot(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleAddScreenshotUrl = () => {
-    if (!newScreenshotUrl.trim()) return;
+    const trimmed = newScreenshotUrl.trim();
+    if (!trimmed) {
+      setScreenshotUrlError('Please enter an image URL.');
+      return;
+    }
+    if (!isValidUrl(trimmed)) {
+      setScreenshotUrlError('Please enter a valid HTTP/HTTPS URL.');
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      screenshots: [...(prev.screenshots || []), newScreenshotUrl.trim()],
+      screenshots: [...(prev.screenshots || []), trimmed],
     }));
     setNewScreenshotUrl('');
+    setScreenshotUrlError(null);
+  };
+
+  const handleUpdateScreenshotUrl = (index: number, updatedUrl: string) => {
+    setFormData((prev) => {
+      const list = [...(prev.screenshots || [])];
+      list[index] = updatedUrl;
+      return { ...prev, screenshots: list };
+    });
+    setFailedScreenshots((prev) => ({ ...prev, [index]: false }));
   };
 
   const handleRemoveScreenshot = (index: number) => {
@@ -161,6 +109,11 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
       ...prev,
       screenshots: (prev.screenshots || []).filter((_, i) => i !== index),
     }));
+    setFailedScreenshots((prev) => {
+      const copy = { ...prev };
+      delete copy[index];
+      return copy;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -173,6 +126,10 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
     }
     if (!formData.shortDescription?.trim()) {
       setErrorMessage('Short description is required.');
+      return;
+    }
+    if (formData.coverImage && !isValidUrl(formData.coverImage)) {
+      setErrorMessage('Cover image must be a valid URL.');
       return;
     }
 
@@ -333,93 +290,164 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                 />
               </div>
 
-              {/* Cover Image & File Upload */}
-              <div className="space-y-2">
-                <label className="block text-xs font-mono text-gray-300 uppercase">
-                  Cover Image URL or Upload
-                </label>
-                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                  <input
-                    type="text"
-                    value={formData.coverImage}
-                    onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                    placeholder="https://... or upload below"
-                    className="flex-1 w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm focus:border-accent focus:outline-none font-mono"
-                  />
-
-                  <motion.label
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-mono text-white cursor-pointer transition-colors flex-shrink-0"
-                  >
-                    <Upload className="w-3.5 h-3.5 text-accent" />
-                    <span>{uploadingCover ? 'Uploading...' : 'Upload Image'}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleCoverUpload}
-                      disabled={uploadingCover}
-                      className="hidden"
-                    />
-                  </motion.label>
+              {/* Cover Image URL Field with Live Preview */}
+              <div className="space-y-3 p-4 rounded-xl bg-black/30 border border-white/5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-mono text-gray-300 uppercase">
+                    Cover Image URL
+                  </label>
+                  {formData.coverImage && isValidUrl(formData.coverImage) && (
+                    <a
+                      href={formData.coverImage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-mono text-accent hover:underline flex items-center gap-1"
+                    >
+                      <span>Open image</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
                 </div>
 
+                <input
+                  type="url"
+                  value={formData.coverImage || ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, coverImage: e.target.value });
+                    setCoverImageFailed(false);
+                  }}
+                  placeholder="https://images.unsplash.com/... or public image URL"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm focus:border-accent focus:outline-none font-mono"
+                />
+
+                {/* Cover Preview */}
                 {formData.coverImage && (
-                  <div className="w-32 h-20 rounded-lg overflow-hidden border border-white/10 relative mt-2 bg-black/40">
-                    <img src={formData.coverImage} alt="Cover preview" className="w-full h-full object-cover" />
+                  <div className="flex items-start gap-4 pt-1">
+                    <div className="w-40 h-24 rounded-lg overflow-hidden border border-white/10 bg-black/50 relative flex items-center justify-center flex-shrink-0">
+                      {coverImageFailed ? (
+                        <div className="p-2 text-center text-red-400 text-[10px] font-mono flex flex-col items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          <span>Broken URL</span>
+                        </div>
+                      ) : (
+                        <img
+                          src={formData.coverImage}
+                          alt="Cover preview"
+                          onError={() => setCoverImageFailed(true)}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400 font-mono space-y-1">
+                      <p className="text-gray-300 font-semibold">Cover Preview</p>
+                      <p className="text-[11px] text-gray-400">
+                        {coverImageFailed
+                          ? 'Could not load this image URL. Verify that it points to a public, direct image link.'
+                          : 'Card thumbnail loaded successfully.'}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Screenshots Gallery */}
-              <div className="space-y-2">
+              {/* Screenshots Gallery URLs with Preview & In-line Editing */}
+              <div className="space-y-3 p-4 rounded-xl bg-black/30 border border-white/5">
                 <label className="block text-xs font-mono text-gray-300 uppercase">
-                  Screenshots Gallery
+                  Screenshots Gallery (Image URLs)
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newScreenshotUrl}
-                    onChange={(e) => setNewScreenshotUrl(e.target.value)}
-                    placeholder="Paste screenshot URL"
-                    className="flex-1 px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddScreenshotUrl}
-                    className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-mono text-white"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
 
-                  <label className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-mono text-white cursor-pointer">
-                    <Upload className="w-3.5 h-3.5 text-accent" />
-                    <span>Upload</span>
+                {/* Add new screenshot URL */}
+                <div className="space-y-1.5">
+                  <div className="flex gap-2">
                     <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleScreenshotUpload}
-                      disabled={uploadingScreenshot}
-                      className="hidden"
+                      type="url"
+                      value={newScreenshotUrl}
+                      onChange={(e) => {
+                        setNewScreenshotUrl(e.target.value);
+                        setScreenshotUrlError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddScreenshotUrl();
+                        }
+                      }}
+                      placeholder="Paste image URL (e.g. https://...)"
+                      className="flex-1 px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono focus:border-accent focus:outline-none"
                     />
-                  </label>
+                    <button
+                      type="button"
+                      onClick={handleAddScreenshotUrl}
+                      className="px-3.5 py-2 rounded-lg bg-accent text-black hover:bg-accent-hover text-xs font-mono font-bold flex items-center gap-1.5 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add URL</span>
+                    </button>
+                  </div>
+                  {screenshotUrlError && (
+                    <p className="text-[11px] text-red-400 font-mono">{screenshotUrlError}</p>
+                  )}
                 </div>
 
-                {formData.screenshots && formData.screenshots.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {formData.screenshots.map((shot, idx) => (
-                      <div key={idx} className="relative w-20 h-14 rounded-lg overflow-hidden border border-white/10 group">
-                        <img src={shot} alt="" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveScreenshot(idx)}
-                          className="absolute inset-0 bg-red-950/80 text-red-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                {/* Screenshots List */}
+                {formData.screenshots && formData.screenshots.length > 0 ? (
+                  <div className="space-y-2 pt-2">
+                    {formData.screenshots.map((shot, idx) => {
+                      const isFailed = !!failedScreenshots[idx];
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-3 p-2.5 rounded-lg bg-white/5 border border-white/10"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="w-16 h-11 rounded overflow-hidden bg-black/60 border border-white/10 flex items-center justify-center flex-shrink-0">
+                            {isFailed ? (
+                              <ImageIcon className="w-4 h-4 text-red-400" />
+                            ) : (
+                              <img
+                                src={shot}
+                                alt={`Screenshot ${idx + 1}`}
+                                onError={() => setFailedScreenshots((prev) => ({ ...prev, [idx]: true }))}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+
+                          <input
+                            type="url"
+                            value={shot}
+                            onChange={(e) => handleUpdateScreenshotUrl(idx, e.target.value)}
+                            className="flex-1 px-2.5 py-1.5 rounded bg-black/50 border border-white/10 text-white text-xs font-mono focus:border-accent focus:outline-none truncate"
+                            title={shot}
+                          />
+
+                          <div className="flex items-center gap-1">
+                            <a
+                              href={shot}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-white/10"
+                              title="Open image in new tab"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveScreenshot(idx)}
+                              className="p-1.5 rounded text-red-400 hover:text-red-300 hover:bg-red-950/40"
+                              title="Remove screenshot"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                ) : (
+                  <p className="text-[11px] text-gray-500 font-mono pt-1">
+                    No screenshots added yet. Paste image URLs above to showcase gameplay.
+                  </p>
                 )}
               </div>
 
@@ -427,10 +455,10 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
-                    Gameplay Trailer / Video URL
+                    Gameplay Trailer / Video URL (YouTube)
                   </label>
                   <input
-                    type="text"
+                    type="url"
                     value={formData.gameplayVideoUrl || ''}
                     onChange={(e) => setFormData({ ...formData, gameplayVideoUrl: e.target.value })}
                     placeholder="e.g. https://youtu.be/OihvAqWn06w"
@@ -443,7 +471,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                     Google Play Store URL
                   </label>
                   <input
-                    type="text"
+                    type="url"
                     value={formData.googlePlayUrl || ''}
                     onChange={(e) => setFormData({ ...formData, googlePlayUrl: e.target.value })}
                     placeholder="e.g. https://play.google.com/store/apps/details?id=..."
@@ -456,7 +484,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                     Itch.io Game URL
                   </label>
                   <input
-                    type="text"
+                    type="url"
                     value={formData.itchUrl || ''}
                     onChange={(e) => setFormData({ ...formData, itchUrl: e.target.value })}
                     placeholder="e.g. https://bobby-esarapu.itch.io/survival-island"
@@ -466,10 +494,10 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
 
                 <div>
                   <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
-                    Demo Link or Shortlink
+                    Demo Link or WebGL Shortlink
                   </label>
                   <input
-                    type="text"
+                    type="url"
                     value={formData.demoUrl || ''}
                     onChange={(e) => setFormData({ ...formData, demoUrl: e.target.value })}
                     placeholder="e.g. https://tinyurl.com/Badri-Driving"

@@ -46,11 +46,7 @@ export const ExperienceSection: React.FC = () => {
       className="py-24 relative bg-[#0c1015]/60 border-t border-white/5 overflow-hidden"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          index="04"
-          title="Development Experience"
-          subtitle="Collaborative studio game production and technical industry internships."
-        />
+        <SectionHeading title="Development Experience" />
 
         <div className="relative ml-4 md:ml-8 space-y-12">
           {/* Base Background Track Line */}

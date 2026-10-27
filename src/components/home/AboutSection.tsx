@@ -11,11 +11,7 @@ export const AboutSection: React.FC = () => {
   return (
     <section id="about" className="py-24 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          index="03"
-          title="About Me"
-          subtitle="Engineering gameplay systems through practical iteration, math, and code architecture."
-        />
+        <SectionHeading title="About Me" />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Main Narrative Column with Staggered Fade Up */}
