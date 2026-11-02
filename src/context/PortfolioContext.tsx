@@ -133,7 +133,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return {
           ...initialSiteSettings,
           ...parsed,
-          linkedinUrl: parsed.linkedinUrl || 'https://linkedin.com/in/bobby-esarapu-68543230',
+          linkedinUrl: parsed.linkedinUrl || 'https://www.linkedin.com/in/bobby-esarapu-68543230/',
           profileImageUrl: parsed.profileImageUrl || '',
           formsubmitToken: parsed.formsubmitToken || initialSiteSettings.formsubmitToken || '91b06bfc469fb65130a07c9b51d2d99',
           emailjsServiceId: parsed.emailjsServiceId || '',
@@ -204,7 +204,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             ...initialSiteSettings,
             ...dbData,
             id: 'current',
-            linkedinUrl: dbData.linkedinUrl || initialSiteSettings.linkedinUrl || 'https://linkedin.com/in/bobby-esarapu-68543230',
+            linkedinUrl: dbData.linkedinUrl || initialSiteSettings.linkedinUrl || 'https://www.linkedin.com/in/bobby-esarapu-68543230/',
             profileImageUrl: dbData.profileImageUrl || '',
             formsubmitToken: dbData.formsubmitToken || initialSiteSettings.formsubmitToken || '91b06bfc469fb65130a07c9b51d2d99',
             emailjsServiceId: dbData.emailjsServiceId || '',

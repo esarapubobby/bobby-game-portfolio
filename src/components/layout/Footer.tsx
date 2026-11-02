@@ -43,7 +43,7 @@ export const Footer: React.FC = () => {
           {/* Social Links & Scroll to Top */}
           <div className="flex items-center gap-3">
             <a
-              href={settings.linkedinUrl || 'https://linkedin.com/in/bobby-esarapu-68543230'}
+              href={settings.linkedinUrl || 'https://www.linkedin.com/in/bobby-esarapu-68543230/'}
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-accent border border-white/10 transition-colors"

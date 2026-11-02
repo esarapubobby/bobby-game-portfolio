@@ -10,6 +10,11 @@ export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [settings.profileImageUrl]);
 
   const navLinks = [
     { name: 'Home', href: '#home', id: 'home' },
@@ -91,8 +96,17 @@ export const Navbar: React.FC = () => {
             whileTap={{ scale: 0.98 }}
             className="group flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-accent rounded-lg p-1"
           >
-            <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-accent/60 group-hover:bg-accent/10 transition-colors">
-              <Gamepad2 className="w-5 h-5 text-accent transition-transform group-hover:rotate-12 duration-200" />
+            <div className="relative w-9 h-9 rounded-full overflow-hidden border border-accent/60 bg-black/40 flex items-center justify-center flex-shrink-0 group-hover:border-accent group-hover:shadow-[0_0_12px_rgba(163,230,53,0.35)] transition-all duration-300">
+              {settings.profileImageUrl && !avatarError ? (
+                <img
+                  src={settings.profileImageUrl}
+                  alt={settings.heroName || 'Bobby Esarapu'}
+                  onError={() => setAvatarError(true)}
+                  className="w-full h-full object-cover object-top"
+                />
+              ) : (
+                <Gamepad2 className="w-5 h-5 text-accent transition-transform group-hover:rotate-12 duration-200" />
+              )}
             </div>
             <div>
               <span className="font-display font-black tracking-tight text-lg text-white group-hover:text-accent transition-colors">
@@ -183,7 +197,7 @@ export const Navbar: React.FC = () => {
               {/* Mobile Social Links */}
               <div className="pt-2 flex items-center gap-3">
                 <a
-                  href={settings.linkedinUrl || 'https://linkedin.com/in/bobby-esarapu-68543230'}
+                  href={settings.linkedinUrl || 'https://www.linkedin.com/in/bobby-esarapu-68543230/'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 py-2 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-xs font-mono text-gray-300 hover:text-white hover:border-accent/40"

@@ -509,6 +509,7 @@ export const AdminSettings: React.FC = () => {
                 required
                 value={formData.linkedinUrl}
                 onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
+                placeholder="https://www.linkedin.com/in/bobby-esarapu-68543230/"
                 className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm font-mono"
               />
             </div>
@@ -521,6 +522,7 @@ export const AdminSettings: React.FC = () => {
                 type="url"
                 value={formData.itchUrl || ''}
                 onChange={(e) => setFormData({ ...formData, itchUrl: e.target.value })}
+                placeholder="https://bobby-esarapu.itch.io/"
                 className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm font-mono"
               />
             </div>

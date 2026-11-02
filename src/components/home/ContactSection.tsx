@@ -185,7 +185,7 @@ export const ContactSection: React.FC = () => {
               {/* Verified Social Channels */}
               <div className="space-y-3 pt-2">
                 <motion.a
-                  href={settings.linkedinUrl || 'https://linkedin.com/in/bobby-esarapu-68543230'}
+                  href={settings.linkedinUrl || 'https://www.linkedin.com/in/bobby-esarapu-68543230/'}
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ x: 4 }}
