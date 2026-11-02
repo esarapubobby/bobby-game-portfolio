@@ -18,6 +18,7 @@ export interface Project {
   coverImage: string;
   screenshots: string[];
   gameplayVideoUrl?: string; // YouTube or direct video embed
+  driveVideoUrl?: string; // Google Drive gameplay video URL
   demoUrl?: string;
   googlePlayUrl?: string;
   itchUrl?: string;

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Project, ProjectStatus } from '../../types';
 import { X, Plus, Trash2, AlertCircle, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { VARIANTS, BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
-import { isValidUrl } from '../../lib/urls';
+import { isValidUrl, extractGoogleDriveId } from '../../lib/urls';
 
 interface ProjectFormModalProps {
   isOpen: boolean;
@@ -26,6 +26,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
     coverImage: '',
     screenshots: [],
     gameplayVideoUrl: '',
+    driveVideoUrl: '',
     demoUrl: '',
     googlePlayUrl: '',
     itchUrl: '',
@@ -47,7 +48,10 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
 
   useEffect(() => {
     if (initialData) {
-      setFormData({ ...initialData });
+      setFormData({
+        ...initialData,
+        driveVideoUrl: initialData.driveVideoUrl || '',
+      });
       setTechInput(initialData.technologies?.join(', ') || '');
     } else {
       setFormData({
@@ -58,6 +62,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
         coverImage: '',
         screenshots: [],
         gameplayVideoUrl: '',
+        driveVideoUrl: '',
         demoUrl: '',
         googlePlayUrl: '',
         itchUrl: '',
@@ -470,7 +475,8 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
               </div>
 
               {/* External Links */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                {/* YouTube Video URL */}
                 <div>
                   <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
                     Gameplay Trailer / Video URL (YouTube)
@@ -482,45 +488,82 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                     placeholder="e.g. https://youtu.be/OihvAqWn06w"
                     className="w-full px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono"
                   />
+                  <p className="text-[10px] text-gray-500 font-mono mt-1">
+                    YouTube trailer embed link (e.g. https://youtu.be/OihvAqWn06w)
+                  </p>
                 </div>
 
+                {/* Google Drive Gameplay Video URL (Below YouTube field) */}
                 <div>
                   <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
-                    Google Play Store URL
+                    GOOGLE DRIVE GAMEPLAY VIDEO URL
                   </label>
                   <input
                     type="url"
-                    value={formData.googlePlayUrl || ''}
-                    onChange={(e) => setFormData({ ...formData, googlePlayUrl: e.target.value })}
-                    placeholder="e.g. https://play.google.com/store/apps/details?id=..."
+                    value={formData.driveVideoUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, driveVideoUrl: e.target.value })}
+                    placeholder="e.g. https://drive.google.com/file/d/1A2B3C4D5E.../view?usp=sharing"
                     className="w-full px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono"
                   />
+                  {formData.driveVideoUrl ? (
+                    <div className="mt-1 text-[10px] font-mono">
+                      {extractGoogleDriveId(formData.driveVideoUrl) ? (
+                        <span className="text-accent">
+                          ✓ Google Drive file ID: {extractGoogleDriveId(formData.driveVideoUrl)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">
+                          Paste a Google Drive link (ensure file is set to "Anyone with the link can view")
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-gray-500 font-mono mt-1">
+                      Paste a Google Drive share link (must have General Access set to "Anyone with the link can view")
+                    </p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
-                    Itch.io Game URL
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.itchUrl || ''}
-                    onChange={(e) => setFormData({ ...formData, itchUrl: e.target.value })}
-                    placeholder="e.g. https://bobby-esarapu.itch.io/survival-island"
-                    className="w-full px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono"
-                  />
-                </div>
+                {/* Store & Demo Links Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div>
+                    <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
+                      Google Play Store URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.googlePlayUrl || ''}
+                      onChange={(e) => setFormData({ ...formData, googlePlayUrl: e.target.value })}
+                      placeholder="e.g. https://play.google.com/store/apps/details?id=..."
+                      className="w-full px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
-                    Demo Link or WebGL Shortlink
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.demoUrl || ''}
-                    onChange={(e) => setFormData({ ...formData, demoUrl: e.target.value })}
-                    placeholder="e.g. https://tinyurl.com/Badri-Driving"
-                    className="w-full px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono"
-                  />
+                  <div>
+                    <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
+                      Itch.io Game URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.itchUrl || ''}
+                      onChange={(e) => setFormData({ ...formData, itchUrl: e.target.value })}
+                      placeholder="e.g. https://bobby-esarapu.itch.io/survival-island"
+                      className="w-full px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
+                      Demo Link or WebGL Shortlink
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.demoUrl || ''}
+                      onChange={(e) => setFormData({ ...formData, demoUrl: e.target.value })}
+                      placeholder="e.g. https://tinyurl.com/Badri-Driving"
+                      className="w-full px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono"
+                    />
+                  </div>
                 </div>
               </div>
 
