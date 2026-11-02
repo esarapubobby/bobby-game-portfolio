@@ -99,7 +99,7 @@ export const Hero: React.FC = () => {
             {/* Availability Badge */}
             {settings.showAvailability && (
               <div className="hero-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs font-mono text-gray-200 hover:border-accent/50 transition-colors shadow-sm">
-                <span className="relative flex h-2 w-2">
+                <span className="relative flex h-2 w-2 flex-shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
                 </span>
@@ -168,13 +168,13 @@ export const Hero: React.FC = () => {
               </motion.a>
 
               {/* Social Channels with Hover Pop */}
-              <div className="flex items-center gap-2 pl-2">
+              <div className="flex items-center gap-2 pl-2 relative z-20">
                 <motion.a
                   href={settings.githubUrl || 'https://github.com/esarapubobby'}
                   target="_blank"
                   rel="noopener noreferrer"
                   {...ICON_BUTTON_INTERACTIONS}
-                  className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:text-white hover:border-accent hover:bg-accent/10 transition-colors focus:outline-none focus:ring-2 focus:ring-accent text-gray-400"
+                  className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:text-white hover:border-accent hover:bg-accent/10 transition-colors focus:outline-none focus:ring-2 focus:ring-accent text-gray-400 relative z-20 cursor-pointer"
                   aria-label="GitHub Profile"
                 >
                   <Github className="w-4 h-4" />
@@ -184,7 +184,7 @@ export const Hero: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   {...ICON_BUTTON_INTERACTIONS}
-                  className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:text-white hover:border-accent hover:bg-accent/10 transition-colors focus:outline-none focus:ring-2 focus:ring-accent text-gray-400"
+                  className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:text-white hover:border-accent hover:bg-accent/10 transition-colors focus:outline-none focus:ring-2 focus:ring-accent text-gray-400 relative z-20 cursor-pointer"
                   aria-label="LinkedIn Profile"
                 >
                   <Linkedin className="w-4 h-4" />

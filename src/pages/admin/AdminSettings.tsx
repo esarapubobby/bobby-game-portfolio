@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { Palette, CheckCircle2, AlertCircle, Save, Sliders, FileText, ExternalLink, Info, Check } from 'lucide-react';
+import { Palette, CheckCircle2, AlertCircle, Save, Sliders, FileText, ExternalLink, Info, Check, Image as ImageIcon, Trash2, RotateCcw, User, Mail } from 'lucide-react';
 import { BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
 import { extractGoogleDriveId, toGoogleDriveDirectDownload, isValidUrl } from '../../lib/urls';
 
@@ -21,10 +21,21 @@ export const AdminSettings: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [testedResumeUrl, setTestedResumeUrl] = useState(false);
+  const [profileImageFailed, setProfileImageFailed] = useState(false);
 
   useEffect(() => {
     setFormData({ ...settings });
+    setProfileImageFailed(false);
   }, [settings]);
+
+  const handleCancel = () => {
+    setFormData({ ...settings });
+    setProfileImageFailed(false);
+    setErrorMsg(null);
+    if (settings.accentColor) {
+      document.documentElement.setAttribute('data-theme', settings.accentColor);
+    }
+  };
 
   const googleDriveId = extractGoogleDriveId(formData.resumeUrl);
   const directDownloadUrl = toGoogleDriveDirectDownload(formData.resumeUrl);
@@ -37,6 +48,12 @@ export const AdminSettings: React.FC = () => {
 
     if (formData.resumeUrl && !isValidUrl(formData.resumeUrl)) {
       setErrorMsg('Please enter a valid HTTP/HTTPS URL or local path for the resume.');
+      setSaving(false);
+      return;
+    }
+
+    if (formData.profileImageUrl && !isValidUrl(formData.profileImageUrl)) {
+      setErrorMsg('Please enter a valid HTTPS/HTTP image URL (e.g. from Cloudinary) for your profile photo.');
       setSaving(false);
       return;
     }
@@ -137,6 +154,109 @@ export const AdminSettings: React.FC = () => {
                 </span>
               </motion.button>
             ))}
+          </div>
+        </div>
+
+        {/* Profile Avatar & Portrait URL */}
+        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-5 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-accent" />
+              <h2 className="font-bold text-white text-base font-display">
+                Profile Photo & Portrait (Cloudinary URL)
+              </h2>
+            </div>
+            {formData.profileImageUrl && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({ ...formData, profileImageUrl: '' });
+                  setProfileImageFailed(false);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-950/40 border border-red-500/30 text-red-300 hover:bg-red-900/50 text-xs font-mono transition-colors"
+                title="Clear profile image URL"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear Image</span>
+              </button>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-400 font-mono">
+            Host your portrait photo on Cloudinary or any public HTTPS image host and paste the URL here. No file upload controls are used.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+            <div className="md:col-span-8 space-y-3">
+              <div>
+                <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
+                  Profile Image URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.profileImageUrl || ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, profileImageUrl: e.target.value.trim() });
+                    setProfileImageFailed(false);
+                  }}
+                  placeholder="https://res.cloudinary.com/your-cloud/image/upload/v1234/bobby-profile.jpg"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm font-mono focus:border-accent focus:outline-none"
+                />
+              </div>
+
+              {formData.profileImageUrl && (
+                <div className="flex items-center gap-3 pt-1">
+                  <a
+                    href={formData.profileImageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-mono text-accent hover:underline"
+                  >
+                    <span>Open image in new tab</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/5 text-[11px] font-mono text-gray-400 space-y-1">
+                <span className="text-gray-300 font-semibold block">Cloudinary Recommendation:</span>
+                <p>
+                  Use an optimized square or portrait image (e.g. 600x600px). When saved, your photo will be displayed in the public About section and portfolio header.
+                </p>
+              </div>
+            </div>
+
+            {/* Live Image Preview */}
+            <div className="md:col-span-4 flex flex-col items-center justify-center">
+              <span className="text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-2 self-start">
+                Live Preview
+              </span>
+              <div className="w-36 h-36 rounded-2xl bg-black/50 border-2 border-white/15 overflow-hidden flex items-center justify-center relative group shadow-xl">
+                {formData.profileImageUrl && !profileImageFailed ? (
+                  <img
+                    src={formData.profileImageUrl}
+                    alt="Bobby Esarapu"
+                    onError={() => setProfileImageFailed(true)}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center p-3 text-gray-500">
+                    <User className="w-10 h-10 text-gray-600 mb-1" />
+                    <span className="text-[10px] font-mono">
+                      {profileImageFailed ? 'Image URL broken' : 'No photo configured'}
+                    </span>
+                  </div>
+                )}
+                <div className="absolute inset-0 border border-accent/20 rounded-2xl pointer-events-none" />
+              </div>
+              <span className="text-[10px] font-mono text-gray-400 mt-2 text-center">
+                {formData.profileImageUrl && !profileImageFailed ? (
+                  <span className="text-lime-400 font-semibold">Ready to display</span>
+                ) : (
+                  <span>Fallback glyph active</span>
+                )}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -407,6 +527,46 @@ export const AdminSettings: React.FC = () => {
           </div>
         </div>
 
+        {/* FormSubmit Direct Email Delivery Configuration */}
+        <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-accent" />
+              <h2 className="font-bold text-white text-base font-display">
+                FormSubmit Direct Email Delivery
+              </h2>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent/15 text-accent border border-accent/30 font-semibold">
+              Destination: {formData.contactEmail || 'esarapubobby@gmail.com'}
+            </span>
+          </div>
+
+          <p className="text-xs text-gray-400 font-mono leading-relaxed">
+            Direct email delivery is powered by FormSubmit. Inquiries submitted via the public contact form are dispatched straight to your verified email (<code className="text-white">{formData.contactEmail || 'esarapubobby@gmail.com'}</code>) with visitor reply-to routing without requiring EmailJS API keys.
+          </p>
+
+          <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-3 text-xs font-mono">
+            <div className="flex items-center gap-2 text-lime-400 font-semibold">
+              <Check className="w-4 h-4" />
+              <span>FormSubmit Direct Email Delivery Active</span>
+            </div>
+            <div className="text-gray-300 space-y-1">
+              <p className="text-[11px] text-gray-400">
+                <span className="text-gray-400">API Endpoint: </span>
+                <span className="text-accent">https://formsubmit.co/ajax/{formData.contactEmail || 'esarapubobby@gmail.com'}</span>
+              </p>
+              <p className="text-[11px] text-gray-400">
+                <span className="text-gray-400">Bot Shield: </span>
+                <span className="text-lime-300">Honeypot Trap + 30s Cooldown Active</span>
+              </p>
+              <p className="text-[11px] text-gray-400">
+                <span className="text-gray-400">Delivery Format: </span>
+                <span className="text-gray-300">Direct Delivery to inbox with visitor Reply-To</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Footer Text */}
         <div className="p-6 rounded-2xl bg-[#111720] border border-white/10 space-y-4 shadow-xl">
           <h2 className="font-bold text-white text-base font-display">
@@ -420,8 +580,18 @@ export const AdminSettings: React.FC = () => {
           />
         </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end pt-4">
+        {/* Actions: Save & Cancel */}
+        <div className="flex items-center justify-end gap-3 pt-4">
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={saving}
+            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 font-bold text-xs uppercase font-mono tracking-wider transition-colors disabled:opacity-50"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Cancel / Reset</span>
+          </button>
+
           <motion.button
             type="submit"
             disabled={saving}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { usePortfolio } from '../../context/PortfolioContext';
@@ -14,16 +14,36 @@ import {
   Eye,
   EyeOff,
   Gamepad2,
+  Flame,
+  Check,
+  RefreshCw,
 } from 'lucide-react';
 import { BUTTON_INTERACTIONS, TRANSITIONS, VARIANTS } from '../../lib/animations';
 
 export const AdminDashboard: React.FC = () => {
-  const { projects, messages, toggleProjectPublished } = usePortfolio();
+  const { projects, toggleProjectPublished, isFirebaseConnected, seedFirestoreIfEmpty } = usePortfolio();
+
+  const [seeding, setSeeding] = useState(false);
+  const [seedSuccess, setSeedSuccess] = useState(false);
+  const [seedError, setSeedError] = useState<string | null>(null);
+
+  const handleSeedFirestore = async () => {
+    setSeeding(true);
+    setSeedError(null);
+    setSeedSuccess(false);
+    const res = await seedFirestoreIfEmpty();
+    setSeeding(false);
+    if (res.success) {
+      setSeedSuccess(true);
+      setTimeout(() => setSeedSuccess(false), 5000);
+    } else {
+      setSeedError(res.error || 'Failed to sync data to Firestore.');
+    }
+  };
 
   const totalProjects = projects.length;
   const publishedProjects = projects.filter((p) => p.published).length;
   const draftProjects = totalProjects - publishedProjects;
-  const unreadMessages = messages.filter((m) => !m.read).length;
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -105,17 +125,62 @@ export const AdminDashboard: React.FC = () => {
           className="p-5 rounded-2xl bg-[#111720] border border-white/10"
         >
           <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-xs font-mono uppercase">Inbox Messages</span>
+            <span className="text-xs font-mono uppercase">Inquiry Delivery</span>
             <Mail className="w-4 h-4 text-accent" />
           </div>
-          <div className="text-3xl font-extrabold text-white font-display">
-            {messages.length}
+          <div className="text-xl sm:text-2xl font-extrabold text-white font-display uppercase tracking-tight">
+            Direct Email
           </div>
-          <span className="text-[10px] font-mono text-accent mt-1 block">
-            {unreadMessages} unread inquiries
+          <span className="text-[10px] font-mono text-accent mt-1 block truncate" title="esarapubobby@gmail.com via EmailJS">
+            esarapubobby@gmail.com
           </span>
         </motion.div>
       </motion.div>
+
+      {/* Firebase Cloud Sync Banner */}
+      {isFirebaseConnected && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-[#111822] to-[#0c1219] border border-accent/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 mt-0.5">
+              <Flame className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-white text-sm">Cloud Firestore Database</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent/15 text-accent border border-accent/30 font-bold">
+                  bobby-portfolio-b9f84
+                </span>
+              </div>
+              <p className="text-xs font-mono text-gray-400 mt-0.5">
+                All projects, skills, experience, and theme customizer changes persist directly to Firestore.
+              </p>
+              {seedSuccess && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-mono text-lime-400 mt-2">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Initial portfolio dataset seeded into Firestore successfully!</span>
+                </span>
+              )}
+              {seedError && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-mono text-red-400 mt-2">
+                  <span>{seedError}</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          <motion.button
+            type="button"
+            disabled={seeding}
+            onClick={handleSeedFirestore}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-accent/40 text-xs font-mono text-gray-200 transition-colors flex-shrink-0 disabled:opacity-50"
+            title="Seeds projects, skills, experience, and education from initial data if database is new"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-accent ${seeding ? 'animate-spin' : ''}`} />
+            <span>{seeding ? 'Syncing to Firestore...' : 'Sync Data to Firestore'}</span>
+          </motion.button>
+        </div>
+      )}
 
       {/* Quick Action Shortcuts */}
       <div className="space-y-3">
@@ -210,11 +275,20 @@ export const AdminDashboard: React.FC = () => {
               className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:bg-white/[0.02] -mx-2 px-2 rounded-lg transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <img
-                  src={proj.coverImage}
-                  alt=""
-                  className="w-12 h-9 rounded-lg object-cover flex-shrink-0 bg-black/40 border border-white/10"
-                />
+                {proj.coverImage ? (
+                  <img
+                    src={proj.coverImage}
+                    alt=""
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                    className="w-12 h-9 rounded-lg object-cover flex-shrink-0 bg-black/40 border border-white/10"
+                  />
+                ) : (
+                  <div className="w-12 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center flex-shrink-0 text-accent/60">
+                    <Gamepad2 className="w-4 h-4" />
+                  </div>
+                )}
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm text-white truncate">

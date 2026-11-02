@@ -12,7 +12,7 @@ export const isSupabaseConfigured = Boolean(
 
 // If configured, initialize the real client. Otherwise provide a safe fallback client.
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey, {
+  ? createClient(supabaseUrl as string, supabaseAnonKey as string, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,

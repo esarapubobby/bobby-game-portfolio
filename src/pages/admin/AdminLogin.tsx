@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { Lock, Mail, KeyRound, AlertCircle, ArrowLeft, ShieldCheck, HelpCircle, Terminal } from 'lucide-react';
+import { Lock, Mail, KeyRound, AlertCircle, ArrowLeft, ShieldCheck, HelpCircle, Terminal, Flame } from 'lucide-react';
 import { BUTTON_INTERACTIONS } from '../../lib/animations';
 
 export const AdminLogin: React.FC = () => {
-  const { signIn, isSupabaseConfigured } = useAuth();
+  const { signIn, isFirebaseConfigured } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -67,16 +67,21 @@ export const AdminLogin: React.FC = () => {
           </div>
 
           {/* Connection status notification */}
-          {!isSupabaseConfigured && (
-            <div className="p-3 rounded-lg bg-amber-950/40 border border-amber-600/40 text-[11px] font-mono text-amber-300 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <span>Local Sandbox Mode Active: Enter administrator email (</span>
-                <strong className="text-white">esarapubobby@gmail.com</strong>
-                <span>) and any password to test.</span>
-              </div>
+          <div className="p-3 rounded-lg bg-black/40 border border-white/10 text-[11px] font-mono text-gray-300 flex items-start gap-2.5">
+            <Flame className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="text-white font-semibold">Firebase Project:</span>{' '}
+              <span className="text-accent font-mono">bobby-portfolio-b9f84</span>{' '}
+              {isFirebaseConfigured ? (
+                <span className="text-[10px] text-lime-400 font-bold ml-1">● Ready</span>
+              ) : (
+                <span className="text-[10px] text-amber-400 font-bold ml-1">● Local Sandbox</span>
+              )}
+              <p className="text-gray-400 text-[10px] mt-0.5">
+                Authorized administrator: <span className="text-white">esarapubobby@gmail.com</span>
+              </p>
             </div>
-          )}
+          </div>
 
           <AnimatePresence>
             {errorMsg && (
@@ -136,7 +141,7 @@ export const AdminLogin: React.FC = () => {
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  <span>Verifying Session...</span>
+                  <span>Verifying Firebase Session...</span>
                 </>
               ) : (
                 <>
@@ -155,7 +160,7 @@ export const AdminLogin: React.FC = () => {
               className="inline-flex items-center gap-1.5 text-[11px] font-mono text-gray-400 hover:text-accent transition-colors"
             >
               <HelpCircle className="w-3.5 h-3.5" />
-              <span>{showSetupGuide ? 'Hide Supabase setup guide' : 'First time admin setup guide'}</span>
+              <span>{showSetupGuide ? 'Hide Firebase setup guide' : 'First time admin setup guide'}</span>
             </button>
           </div>
 
@@ -169,18 +174,30 @@ export const AdminLogin: React.FC = () => {
               >
                 <p className="font-bold text-white flex items-center gap-1.5">
                   <Terminal className="w-3.5 h-3.5 text-accent" />
-                  How to set up your Supabase Admin:
+                  How to enable Firebase Authentication:
                 </p>
-                <ol className="list-decimal pl-4 space-y-1 text-gray-400 text-[11px]">
-                  <li>Sign up at <span className="text-white">supabase.com</span> and create a project.</li>
-                  <li>Go to <span className="text-white">SQL Editor</span> and execute <span className="text-accent">supabase/schema.sql</span>.</li>
-                  <li>Go to <span className="text-white">Authentication &gt; Users &gt; Add User</span> with your email.</li>
-                  <li>In SQL Editor, authorize your user:
-                    <div className="p-2 bg-black rounded mt-1 text-accent break-all text-[10px]">
-                      INSERT INTO public.admin_users (id, email) VALUES ('&lt;user_id&gt;', 'esarapubobby@gmail.com');
-                    </div>
+                <ol className="list-decimal pl-4 space-y-1.5 text-gray-400 text-[11px]">
+                  <li>
+                    Open <span className="text-white">console.firebase.google.com</span> and navigate to project{' '}
+                    <span className="text-accent">bobby-portfolio-b9f84</span>.
                   </li>
-                  <li>Paste your project URL & Anon key into <span className="text-white">.env</span>.</li>
+                  <li>
+                    Go to <span className="text-white">Build &gt; Authentication</span> and click{' '}
+                    <span className="text-accent">Get Started</span>.
+                  </li>
+                  <li>
+                    Under the <span className="text-white">Sign-in method</span> tab, select{' '}
+                    <span className="text-white">Email/Password</span>, toggle <span className="text-accent">Enable</span>, and click Save.
+                  </li>
+                  <li>
+                    Under the <span className="text-white">Users</span> tab, click <span className="text-white">Add user</span>.
+                  </li>
+                  <li>
+                    Enter <span className="text-accent">esarapubobby@gmail.com</span> and choose your administrator password.
+                  </li>
+                  <li>
+                    Return here and sign in with the email & password you just created!
+                  </li>
                 </ol>
               </motion.div>
             )}

@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: Check if caller is authenticated with Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper: Verify whether authenticated user is the designated portfolio admin.
+    // Checks both the verified email token and existence in the admin_users collection.
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email.lower() == 'esarapubobby@gmail.com' ||
+        exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))
+      );
+    }
+
+    // 1. Projects Collection
+    // Public visitors can only read published projects.
+    // Authorized admin can read all (including unpublished drafts), create, update, delete.
+    match /projects/{projectId} {
+      allow read: if (resource != null && resource.data.published == true) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // 2. Site Settings Collection
+    // Public visitors can read the site appearance, theme, hero, bio, and social links.
+    // Only the administrator can modify settings.
+    match /site_settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 3. Skills Collection
+    // Public visitors can read technical skills.
+    // Only the administrator can modify skills.
+    match /skills/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 4. Experience Collection
+    // Public visitors can read work and team experience.
+    // Only the administrator can modify experience entries.
+    match /experience/{experienceId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 5. Education Collection
+    // Public visitors can read degree and academic qualifications.
+    // Only the administrator can modify education entries.
+    match /education/{educationId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 6. Contact Messages Collection
+    // Anyone on the public web can submit a contact message with basic validation.
+    // Only the authenticated administrator can read, mark read, or delete submissions.
+    match /contact_messages/{messageId} {
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.name.size() >= 2 &&
+                       request.resource.data.email is string &&
+                       request.resource.data.email.size() >= 5 &&
+                       request.resource.data.message is string &&
+                       request.resource.data.message.size() >= 5;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 7. Admin Users Registry
+    // Only authenticated admins can read or update admin privileges.
+    match /admin_users/{userId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

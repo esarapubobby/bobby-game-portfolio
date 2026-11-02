@@ -18,6 +18,7 @@ export default defineConfig({
           'vendor-ui': ['lucide-react', 'framer-motion'],
           'vendor-anim': ['gsap', 'lenis'],
           'vendor-three': ['three'],
+          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/analytics'],
           'vendor-supabase': ['@supabase/supabase-js'],
         },
       },

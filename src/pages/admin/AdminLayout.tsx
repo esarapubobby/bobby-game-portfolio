@@ -16,13 +16,13 @@ import {
   Menu,
   X,
   ShieldCheck,
-  Cloud,
+  Flame,
   CloudOff,
 } from 'lucide-react';
 import { BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
 
 export const AdminLayout: React.FC = () => {
-  const { user, isAdmin, loading, signOut, isSupabaseConfigured } = useAuth();
+  const { user, isAdmin, loading, signOut, isFirebaseConfigured } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -102,12 +102,12 @@ export const AdminLayout: React.FC = () => {
               </div>
             </div>
 
-            {/* Supabase Connection State indicator */}
+            {/* Firebase Connection State indicator */}
             <div className="mt-4 p-2.5 rounded-lg bg-black/40 border border-white/5 flex items-center gap-2 text-[11px] font-mono">
-              {isSupabaseConfigured ? (
+              {isFirebaseConfigured ? (
                 <>
-                  <Cloud className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-                  <span className="text-gray-300">Supabase Connected</span>
+                  <Flame className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+                  <span className="text-gray-300">Firebase Connected</span>
                 </>
               ) : (
                 <>

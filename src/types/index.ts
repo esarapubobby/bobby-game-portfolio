@@ -83,6 +83,11 @@ export interface SiteSettings {
   linkedinUrl: string;
   itchUrl?: string;
   resumeUrl: string;
+  profileImageUrl?: string;
+  formsubmitToken?: string;
+  emailjsServiceId?: string;
+  emailjsTemplateId?: string;
+  emailjsPublicKey?: string;
   accentColor: 'lime' | 'emerald' | 'cyan' | 'amber' | 'violet';
   showAvailability: boolean;
   footerText: string;

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import {
   Project,
   SkillCategory,
@@ -14,7 +14,20 @@ import {
   initialEducation,
   initialSiteSettings,
 } from '../data/initialData';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  updateDoc,
+  query,
+  where,
+  writeBatch,
+} from 'firebase/firestore';
+import { db, isFirebaseConfigured } from '../lib/firebase';
+import { useAuth } from './AuthContext';
 
 interface PortfolioContextType {
   projects: Project[];
@@ -25,8 +38,10 @@ interface PortfolioContextType {
   messages: ContactMessage[];
   loading: boolean;
   error: string | null;
-  isSupabaseConnected: boolean;
+  isFirebaseConnected: boolean;
+  isSupabaseConnected: boolean; // Alias for backward compatibility
   refreshData: () => Promise<void>;
+  seedFirestoreIfEmpty: () => Promise<{ success: boolean; error?: string }>;
 
   // Project Actions
   saveProject: (project: Partial<Project>) => Promise<{ success: boolean; error?: string }>;
@@ -79,6 +94,8 @@ const cleanUnsplashUrls = (list: Project[]): Project[] => {
 };
 
 export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAdmin } = useAuth();
+
   const [projects, setProjects] = useState<Project[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.PROJECTS);
     if (saved) {
@@ -113,7 +130,16 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (parsed && parsed.accentColor) {
           document.documentElement.setAttribute('data-theme', parsed.accentColor);
         }
-        return parsed;
+        return {
+          ...initialSiteSettings,
+          ...parsed,
+          linkedinUrl: parsed.linkedinUrl || 'https://linkedin.com/in/bobby-esarapu-68543230',
+          profileImageUrl: parsed.profileImageUrl || '',
+          formsubmitToken: parsed.formsubmitToken || initialSiteSettings.formsubmitToken || '91b06bfc469fb65130a07c9b51d2d99',
+          emailjsServiceId: parsed.emailjsServiceId || '',
+          emailjsTemplateId: parsed.emailjsTemplateId || '',
+          emailjsPublicKey: parsed.emailjsPublicKey || '',
+        };
       } catch (e) {}
     }
     return initialSiteSettings;
@@ -157,9 +183,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(messages));
   }, [messages]);
 
-  // Fetch data from Supabase if configured
-  const refreshData = async () => {
-    if (!isSupabaseConfigured) {
+  // Fetch data from Cloud Firestore
+  const refreshData = useCallback(async () => {
+    if (!isFirebaseConfigured) {
       setLoading(false);
       return;
     }
@@ -168,105 +194,209 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setLoading(true);
       setError(null);
 
-      // Fetch projects
-      const { data: dbProjects, error: projErr } = await supabase
-        .from('projects')
-        .select('*')
-        .order('sort_order', { ascending: true });
-
-      if (projErr) throw projErr;
-
-      if (dbProjects && dbProjects.length > 0) {
-        const mapped: Project[] = dbProjects.map((p: any) => {
-          const isUnsplash = (url?: string) => Boolean(url && url.includes('images.unsplash.com'));
-          return {
-            id: p.id,
-            title: p.title,
-            category: p.category,
-            shortDescription: p.short_description,
-            detailedDescription: p.detailed_description,
-            coverImage: isUnsplash(p.cover_image) ? '' : (p.cover_image || ''),
-            screenshots: (p.screenshots || []).filter((s: string) => !isUnsplash(s)),
-            gameplayVideoUrl: p.gameplay_video_url,
-            demoUrl: p.demo_url,
-            googlePlayUrl: p.google_play_url,
-            itchUrl: p.itch_url,
-            githubUrl: p.github_url,
-            technologies: p.technologies || [],
-            status: p.status,
-            featured: p.featured,
-            published: p.published,
-            sortOrder: p.sort_order,
-            createdAt: p.created_at,
-            updatedAt: p.updated_at,
+      // 1. Fetch site settings
+      try {
+        const settingsDocRef = doc(db, 'site_settings', 'current');
+        const settingsSnap = await getDoc(settingsDocRef);
+        if (settingsSnap.exists()) {
+          const dbData = settingsSnap.data() as Partial<SiteSettings>;
+          const mergedSettings: SiteSettings = {
+            ...initialSiteSettings,
+            ...dbData,
+            id: 'current',
+            linkedinUrl: dbData.linkedinUrl || initialSiteSettings.linkedinUrl || 'https://linkedin.com/in/bobby-esarapu-68543230',
+            profileImageUrl: dbData.profileImageUrl || '',
+            formsubmitToken: dbData.formsubmitToken || initialSiteSettings.formsubmitToken || '91b06bfc469fb65130a07c9b51d2d99',
+            emailjsServiceId: dbData.emailjsServiceId || '',
+            emailjsTemplateId: dbData.emailjsTemplateId || '',
+            emailjsPublicKey: dbData.emailjsPublicKey || '',
           };
-        });
-        setProjects(mapped);
-        localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(mapped));
+          setSettings(mergedSettings);
+          localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(mergedSettings));
+          if (mergedSettings.accentColor) {
+            document.documentElement.setAttribute('data-theme', mergedSettings.accentColor);
+          }
+        }
+      } catch (e) {
+        console.warn('Firestore settings fetch notice:', e);
       }
 
-      // Fetch settings
-      const { data: dbSettings } = await supabase
-        .from('site_settings')
-        .select('*')
-        .eq('id', 'current')
-        .maybeSingle();
+      // 2. Fetch projects
+      try {
+        // When admin: fetch all projects (published + drafts)
+        // When public visitor: query only published projects so Firestore Security Rules allow read
+        const projectsRef = collection(db, 'projects');
+        const projQuery = isAdmin
+          ? query(projectsRef)
+          : query(projectsRef, where('published', '==', true));
 
-      if (dbSettings) {
-        const mergedSettings: SiteSettings = {
-          id: dbSettings.id,
-          heroName: dbSettings.hero_name || initialSiteSettings.heroName,
-          heroTitle: dbSettings.hero_title || initialSiteSettings.heroTitle,
-          heroQuote: dbSettings.hero_quote || initialSiteSettings.heroQuote,
-          heroAvailabilityText: dbSettings.hero_availability_text || initialSiteSettings.heroAvailabilityText,
-          aboutBioP1: dbSettings.about_bio_p1 || initialSiteSettings.aboutBioP1,
-          aboutBioP2: dbSettings.about_bio_p2 || initialSiteSettings.aboutBioP2,
-          aboutLocation: dbSettings.about_location || initialSiteSettings.aboutLocation,
-          contactEmail: dbSettings.contact_email || initialSiteSettings.contactEmail,
-          githubUrl: dbSettings.github_url || initialSiteSettings.githubUrl,
-          linkedinUrl: dbSettings.linkedin_url || initialSiteSettings.linkedinUrl,
-          itchUrl: dbSettings.itch_url || initialSiteSettings.itchUrl,
-          resumeUrl: dbSettings.resume_url || initialSiteSettings.resumeUrl,
-          accentColor: (dbSettings.accent_color as any) || initialSiteSettings.accentColor,
-          showAvailability: dbSettings.show_availability ?? true,
-          footerText: dbSettings.footer_text || initialSiteSettings.footerText,
-        };
-        setSettings(mergedSettings);
-        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(mergedSettings));
-        if (mergedSettings.accentColor) {
-          document.documentElement.setAttribute('data-theme', mergedSettings.accentColor);
+        const projectsSnap = await getDocs(projQuery);
+        if (!projectsSnap.empty) {
+          const loadedProjects: Project[] = [];
+          projectsSnap.forEach((docSnap) => {
+            const data = docSnap.data() as Project;
+            loadedProjects.push({
+              ...data,
+              id: docSnap.id,
+            });
+          });
+
+          const sorted = cleanUnsplashUrls(
+            loadedProjects.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+          );
+          setProjects(sorted);
+          localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(sorted));
+        }
+      } catch (e) {
+        console.warn('Firestore projects fetch notice:', e);
+      }
+
+      // 3. Fetch skills
+      try {
+        const skillsRef = collection(db, 'skills');
+        const skillsSnap = await getDocs(skillsRef);
+        if (!skillsSnap.empty) {
+          const loadedSkills: SkillCategory[] = [];
+          skillsSnap.forEach((docSnap) => {
+            const data = docSnap.data() as SkillCategory;
+            loadedSkills.push({
+              ...data,
+              id: docSnap.id,
+            });
+          });
+          const sorted = loadedSkills.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+          setSkills(sorted);
+          localStorage.setItem(STORAGE_KEYS.SKILLS, JSON.stringify(sorted));
+        }
+      } catch (e) {
+        console.warn('Firestore skills fetch notice:', e);
+      }
+
+      // 4. Fetch experience
+      try {
+        const expRef = collection(db, 'experience');
+        const expSnap = await getDocs(expRef);
+        if (!expSnap.empty) {
+          const loadedExp: ExperienceItem[] = [];
+          expSnap.forEach((docSnap) => {
+            const data = docSnap.data() as ExperienceItem;
+            loadedExp.push({
+              ...data,
+              id: docSnap.id,
+            });
+          });
+          const sorted = loadedExp.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+          setExperience(sorted);
+          localStorage.setItem(STORAGE_KEYS.EXPERIENCE, JSON.stringify(sorted));
+        }
+      } catch (e) {
+        console.warn('Firestore experience fetch notice:', e);
+      }
+
+      // 5. Fetch education
+      try {
+        const eduRef = collection(db, 'education');
+        const eduSnap = await getDocs(eduRef);
+        if (!eduSnap.empty) {
+          const loadedEdu: EducationItem[] = [];
+          eduSnap.forEach((docSnap) => {
+            const data = docSnap.data() as EducationItem;
+            loadedEdu.push({
+              ...data,
+              id: docSnap.id,
+            });
+          });
+          const sorted = loadedEdu.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+          setEducation(sorted);
+          localStorage.setItem(STORAGE_KEYS.EDUCATION, JSON.stringify(sorted));
+        }
+      } catch (e) {
+        console.warn('Firestore education fetch notice:', e);
+      }
+
+      // 6. Fetch contact messages (only accessible when admin)
+      if (isAdmin) {
+        try {
+          const msgRef = collection(db, 'contact_messages');
+          const msgSnap = await getDocs(msgRef);
+          if (!msgSnap.empty) {
+            const loadedMsgs: ContactMessage[] = [];
+            msgSnap.forEach((docSnap) => {
+              const data = docSnap.data() as ContactMessage;
+              loadedMsgs.push({
+                ...data,
+                id: docSnap.id,
+              });
+            });
+            const sorted = loadedMsgs.sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            setMessages(sorted);
+            localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(sorted));
+          }
+        } catch (e) {
+          console.warn('Firestore messages fetch notice:', e);
         }
       }
-
-      // Fetch contact messages (Admin role will succeed via RLS)
-      const { data: dbMessages } = await supabase
-        .from('contact_messages')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (dbMessages) {
-        setMessages(
-          dbMessages.map((m: any) => ({
-            id: m.id,
-            name: m.name,
-            email: m.email,
-            message: m.message,
-            read: m.read,
-            createdAt: m.created_at,
-          }))
-        );
-      }
     } catch (err: any) {
-      console.warn('Supabase sync warning:', err.message);
+      console.warn('Firestore sync warning:', err.message);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAdmin]);
 
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [refreshData]);
+
+  // Seed initial data into Firestore if database is empty
+  const seedFirestoreIfEmpty = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!isFirebaseConfigured) {
+      return { success: false, error: 'Firebase is not configured.' };
+    }
+
+    try {
+      setLoading(true);
+      const batch = writeBatch(db);
+
+      // 1. Seed Site Settings
+      const settingsRef = doc(db, 'site_settings', 'current');
+      batch.set(settingsRef, initialSiteSettings, { merge: true });
+
+      // 2. Seed Projects
+      for (const proj of cleanUnsplashUrls(initialProjects)) {
+        const projRef = doc(db, 'projects', proj.id);
+        batch.set(projRef, proj, { merge: true });
+      }
+
+      // 3. Seed Skills
+      for (const cat of initialSkillCategories) {
+        const catRef = doc(db, 'skills', cat.id);
+        batch.set(catRef, cat, { merge: true });
+      }
+
+      // 4. Seed Experience
+      for (const exp of initialExperience) {
+        const expRef = doc(db, 'experience', exp.id);
+        batch.set(expRef, exp, { merge: true });
+      }
+
+      // 5. Seed Education
+      for (const edu of initialEducation) {
+        const eduRef = doc(db, 'education', edu.id);
+        batch.set(eduRef, edu, { merge: true });
+      }
+
+      await batch.commit();
+      await refreshData();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to seed Firestore data.' };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Project Actions
   const saveProject = async (projectData: Partial<Project>): Promise<{ success: boolean; error?: string }> => {
@@ -298,29 +428,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updatedAt: new Date().toISOString(),
       };
 
-      if (isSupabaseConfigured) {
-        const { error: dbErr } = await supabase.from('projects').upsert({
-          id: updatedProject.id,
-          title: updatedProject.title,
-          category: updatedProject.category,
-          short_description: updatedProject.shortDescription,
-          detailed_description: updatedProject.detailedDescription,
-          cover_image: updatedProject.coverImage,
-          screenshots: updatedProject.screenshots,
-          gameplay_video_url: updatedProject.gameplayVideoUrl,
-          demo_url: updatedProject.demoUrl,
-          google_play_url: updatedProject.googlePlayUrl,
-          itch_url: updatedProject.itchUrl,
-          github_url: updatedProject.githubUrl,
-          technologies: updatedProject.technologies,
-          status: updatedProject.status,
-          featured: updatedProject.featured,
-          published: updatedProject.published,
-          sort_order: updatedProject.sortOrder,
-          updated_at: new Date().toISOString(),
-        });
-
-        if (dbErr) throw dbErr;
+      if (isFirebaseConfigured) {
+        const docRef = doc(db, 'projects', updatedProject.id);
+        await setDoc(docRef, updatedProject, { merge: true });
       }
 
       setProjects((prev) => {
@@ -340,9 +450,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deleteProject = async (id: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      if (isSupabaseConfigured) {
-        const { error: dbErr } = await supabase.from('projects').delete().eq('id', id);
-        if (dbErr) throw dbErr;
+      if (isFirebaseConfigured) {
+        await deleteDoc(doc(db, 'projects', id));
       }
       setProjects((prev) => prev.filter((p) => p.id !== id));
       return { success: true };
@@ -362,6 +471,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       published: false,
       sortOrder: projects.length + 1,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     return saveProject(clone);
@@ -388,124 +498,157 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     updated.sort((a, b) => a.sortOrder - b.sortOrder);
     setProjects(updated);
 
-    if (isSupabaseConfigured) {
-      for (const item of updated) {
-        await supabase.from('projects').update({ sort_order: item.sortOrder }).eq('id', item.id);
+    if (isFirebaseConfigured) {
+      try {
+        const batch = writeBatch(db);
+        for (const item of updated) {
+          const itemRef = doc(db, 'projects', item.id);
+          batch.update(itemRef, { sortOrder: item.sortOrder });
+        }
+        await batch.commit();
+      } catch (err) {
+        console.warn('Batch project reorder error:', err);
       }
     }
   };
 
   // Skills Actions
   const saveSkillCategory = async (category: SkillCategory): Promise<{ success: boolean; error?: string }> => {
-    setSkills((prev) => {
-      const exists = prev.some((c) => c.id === category.id);
-      if (exists) {
-        return prev.map((c) => (c.id === category.id ? category : c));
+    try {
+      if (isFirebaseConfigured) {
+        await setDoc(doc(db, 'skills', category.id), category, { merge: true });
       }
-      return [...prev, category];
-    });
-    return { success: true };
+
+      setSkills((prev) => {
+        const exists = prev.some((c) => c.id === category.id);
+        if (exists) {
+          return prev.map((c) => (c.id === category.id ? category : c));
+        }
+        return [...prev, category];
+      });
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to save skill category' };
+    }
   };
 
   const deleteSkillCategory = async (id: string): Promise<{ success: boolean; error?: string }> => {
-    setSkills((prev) => prev.filter((c) => c.id !== id));
-    return { success: true };
+    try {
+      if (isFirebaseConfigured) {
+        await deleteDoc(doc(db, 'skills', id));
+      }
+      setSkills((prev) => prev.filter((c) => c.id !== id));
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to delete category' };
+    }
   };
 
   const saveSkill = async (categoryId: string, skillName: string, highlight: boolean = false) => {
     const newId = `sk-${Date.now()}`;
-    setSkills((prev) =>
-      prev.map((cat) => {
-        if (cat.id === categoryId) {
-          return {
-            ...cat,
-            skills: [...cat.skills, { id: newId, name: skillName.trim(), highlight }],
-          };
-        }
-        return cat;
-      })
-    );
+    const category = skills.find((c) => c.id === categoryId);
+    if (!category) return;
+
+    const updatedCategory: SkillCategory = {
+      ...category,
+      skills: [...category.skills, { id: newId, name: skillName.trim(), highlight }],
+    };
+
+    await saveSkillCategory(updatedCategory);
   };
 
   const deleteSkill = async (categoryId: string, skillId: string) => {
-    setSkills((prev) =>
-      prev.map((cat) => {
-        if (cat.id === categoryId) {
-          return {
-            ...cat,
-            skills: cat.skills.filter((s) => s.id !== skillId),
-          };
-        }
-        return cat;
-      })
-    );
+    const category = skills.find((c) => c.id === categoryId);
+    if (!category) return;
+
+    const updatedCategory: SkillCategory = {
+      ...category,
+      skills: category.skills.filter((s) => s.id !== skillId),
+    };
+
+    await saveSkillCategory(updatedCategory);
   };
 
   // Experience Actions
   const saveExperience = async (item: ExperienceItem): Promise<{ success: boolean; error?: string }> => {
-    setExperience((prev) => {
-      const exists = prev.some((e) => e.id === item.id);
-      if (exists) {
-        return prev.map((e) => (e.id === item.id ? item : e));
+    try {
+      if (isFirebaseConfigured) {
+        await setDoc(doc(db, 'experience', item.id), item, { merge: true });
       }
-      return [...prev, item].sort((a, b) => a.sortOrder - b.sortOrder);
-    });
-    return { success: true };
+
+      setExperience((prev) => {
+        const exists = prev.some((e) => e.id === item.id);
+        if (exists) {
+          return prev.map((e) => (e.id === item.id ? item : e));
+        }
+        return [...prev, item].sort((a, b) => a.sortOrder - b.sortOrder);
+      });
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to save experience' };
+    }
   };
 
   const deleteExperience = async (id: string): Promise<{ success: boolean; error?: string }> => {
-    setExperience((prev) => prev.filter((e) => e.id !== id));
-    return { success: true };
+    try {
+      if (isFirebaseConfigured) {
+        await deleteDoc(doc(db, 'experience', id));
+      }
+      setExperience((prev) => prev.filter((e) => e.id !== id));
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to delete experience' };
+    }
   };
 
   // Education Actions
   const saveEducation = async (item: EducationItem): Promise<{ success: boolean; error?: string }> => {
-    setEducation((prev) => {
-      const exists = prev.some((e) => e.id === item.id);
-      if (exists) {
-        return prev.map((e) => (e.id === item.id ? item : e));
+    try {
+      if (isFirebaseConfigured) {
+        await setDoc(doc(db, 'education', item.id), item, { merge: true });
       }
-      return [...prev, item].sort((a, b) => a.sortOrder - b.sortOrder);
-    });
-    return { success: true };
+
+      setEducation((prev) => {
+        const exists = prev.some((e) => e.id === item.id);
+        if (exists) {
+          return prev.map((e) => (e.id === item.id ? item : e));
+        }
+        return [...prev, item].sort((a, b) => a.sortOrder - b.sortOrder);
+      });
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to save education' };
+    }
   };
 
   const deleteEducation = async (id: string): Promise<{ success: boolean; error?: string }> => {
-    setEducation((prev) => prev.filter((e) => e.id !== id));
-    return { success: true };
+    try {
+      if (isFirebaseConfigured) {
+        await deleteDoc(doc(db, 'education', id));
+      }
+      setEducation((prev) => prev.filter((e) => e.id !== id));
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to delete education' };
+    }
   };
 
   // Settings Actions
   const updateSettings = async (newSettings: Partial<SiteSettings>): Promise<{ success: boolean; error?: string }> => {
     try {
-      const merged = { ...settings, ...newSettings };
+      const merged: SiteSettings = { ...settings, ...newSettings, id: 'current' };
       setSettings(merged);
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(merged));
       if (merged.accentColor) {
         document.documentElement.setAttribute('data-theme', merged.accentColor);
       }
 
-      if (isSupabaseConfigured) {
-        const { error: dbErr } = await supabase.from('site_settings').upsert({
-          id: 'current',
-          hero_name: merged.heroName,
-          hero_title: merged.heroTitle,
-          hero_quote: merged.heroQuote,
-          hero_availability_text: merged.heroAvailabilityText,
-          about_bio_p1: merged.aboutBioP1,
-          about_bio_p2: merged.aboutBioP2,
-          about_location: merged.aboutLocation,
-          contact_email: merged.contactEmail,
-          github_url: merged.githubUrl,
-          linkedin_url: merged.linkedinUrl,
-          itch_url: merged.itchUrl,
-          resume_url: merged.resumeUrl,
-          accent_color: merged.accentColor,
-          show_availability: merged.showAvailability,
-          footer_text: merged.footerText,
-          updated_at: new Date().toISOString(),
-        });
-        if (dbErr) throw dbErr;
+      if (isFirebaseConfigured) {
+        const settingsRef = doc(db, 'site_settings', 'current');
+        await setDoc(settingsRef, {
+          ...merged,
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
       }
 
       return { success: true };
@@ -514,7 +657,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  // Contact Form Submission
+  // Contact Form Submission (Note: Production inquiries are delivered directly via EmailJS to esarapubobby@gmail.com)
   const submitMessage = async (data: { name: string; email: string; message: string }): Promise<{ success: boolean; error?: string }> => {
     try {
       if (!data.name || data.name.trim().length < 2) {
@@ -527,41 +670,31 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return { success: false, error: 'Please enter a message of at least 5 characters.' };
       }
 
-      const newMsg: ContactMessage = {
-        id: `msg-${Date.now()}`,
-        name: data.name.trim(),
-        email: data.email.trim(),
-        message: data.message.trim(),
-        read: false,
-        createdAt: new Date().toISOString(),
-      };
-
-      if (isSupabaseConfigured) {
-        const { error: dbErr } = await supabase.from('contact_messages').insert({
-          name: newMsg.name,
-          email: newMsg.email,
-          message: newMsg.message,
-        });
-        if (dbErr) throw dbErr;
-      }
-
-      setMessages((prev) => [newMsg, ...prev]);
+      // Explicitly decoupled from Firestore and localStorage per direct EmailJS delivery requirement
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Failed to send message.' };
+      return { success: false, error: err.message || 'Failed to process message.' };
     }
   };
 
   const markMessageRead = async (id: string) => {
-    if (isSupabaseConfigured) {
-      await supabase.from('contact_messages').update({ read: true }).eq('id', id);
+    if (isFirebaseConfigured) {
+      try {
+        await updateDoc(doc(db, 'contact_messages', id), { read: true });
+      } catch (err) {
+        console.warn('Mark message read error:', err);
+      }
     }
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)));
   };
 
   const deleteMessage = async (id: string) => {
-    if (isSupabaseConfigured) {
-      await supabase.from('contact_messages').delete().eq('id', id);
+    if (isFirebaseConfigured) {
+      try {
+        await deleteDoc(doc(db, 'contact_messages', id));
+      } catch (err) {
+        console.warn('Delete message error:', err);
+      }
     }
     setMessages((prev) => prev.filter((m) => m.id !== id));
   };
@@ -577,8 +710,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         messages,
         loading,
         error,
-        isSupabaseConnected: isSupabaseConfigured,
+        isFirebaseConnected: isFirebaseConfigured,
+        isSupabaseConnected: isFirebaseConfigured,
         refreshData,
+        seedFirestoreIfEmpty,
         saveProject,
         deleteProject,
         duplicateProject,

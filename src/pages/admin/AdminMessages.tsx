@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { Trash2, Clock, User, AtSign, Inbox } from 'lucide-react';
+import { Trash2, Clock, User, AtSign, Inbox, Mail } from 'lucide-react';
 import { BUTTON_INTERACTIONS, ICON_BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
 
 export const AdminMessages: React.FC = () => {
@@ -11,19 +11,29 @@ export const AdminMessages: React.FC = () => {
     <div className="space-y-8 animate-fadeIn">
       <div>
         <h1 className="text-2xl sm:text-3xl font-black text-white font-display">
-          Contact Inquiries & Messages
+          Contact Inquiries & Email Delivery
         </h1>
         <p className="text-xs sm:text-sm text-gray-400 font-mono mt-1">
-          Review messages submitted through the public portfolio contact form.
+          Public portfolio inquiries are delivered directly to your inbox at <span className="text-accent font-semibold">esarapubobby@gmail.com</span> via FormSubmit.
         </p>
+      </div>
+
+      <div className="p-4 rounded-xl bg-gradient-to-r from-[#111822] to-[#0c1219] border border-accent/25 flex items-start gap-3">
+        <Mail className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+        <div className="text-xs font-mono text-gray-300 space-y-1">
+          <span className="text-white font-semibold block">Direct-to-Inbox Routing Active</span>
+          <p className="text-gray-400 text-[11px]">
+            Inquiries submitted through the Get in Touch form no longer persist in the database or admin dashboard. They are dispatched straight to <strong className="text-white">esarapubobby@gmail.com</strong> with visitor reply-to routing.
+          </p>
+        </div>
       </div>
 
       {messages.length === 0 ? (
         <div className="py-20 text-center rounded-2xl bg-[#111720] border border-white/10 p-8 space-y-3">
           <Inbox className="w-10 h-10 text-gray-500 mx-auto" />
-          <h3 className="text-base font-bold text-white font-display">Inbox is Empty</h3>
+          <h3 className="text-base font-bold text-white font-display">Direct Email Delivery Configured</h3>
           <p className="text-xs text-gray-400 font-mono max-w-md mx-auto">
-            When recruiters, indie game studios, or fellow developers send a message from the website, it will be securely delivered and logged here.
+            Recruiter and collaboration inquiries are routed straight to <span className="text-white">esarapubobby@gmail.com</span> via FormSubmit instead of being stored in the database.
           </p>
         </div>
       ) : (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Terminal, Gamepad2 } from 'lucide-react';
+import { Menu, X, Terminal, Gamepad2, Linkedin, Github } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { TRANSITIONS } from '../../lib/animations';
 import { getLenis } from '../../lib/lenis';
@@ -106,31 +106,33 @@ export const Navbar: React.FC = () => {
           </motion.a>
 
           {/* Desktop Navigation with Animated Indicator Pill */}
-          <nav className="hidden md:flex items-center gap-1.5 bg-[#10151c]/70 p-1.5 rounded-full border border-white/10 backdrop-blur-md" aria-label="Main Navigation">
-            {navLinks.map((link) => {
-              const isActive = activeSection === link.id;
-              return (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={(e) => handleScrollTo(e, link.href, link.id)}
-                  className={`relative px-4 py-1.5 text-xs font-mono transition-colors rounded-full focus:outline-none focus:ring-1 focus:ring-accent ${
-                    isActive ? 'text-accent font-semibold' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {isActive && (
-                    <motion.span
-                      layoutId="activeNavPill"
-                      className="absolute inset-0 rounded-full bg-white/10 border border-accent/40"
-                      transition={TRANSITIONS.snappy}
-                      aria-hidden="true"
-                    />
-                  )}
-                  <span className="relative z-10">{link.name}</span>
-                </a>
-              );
-            })}
-          </nav>
+          <div className="hidden md:flex items-center">
+            <nav className="flex items-center gap-1.5 bg-[#10151c]/70 p-1.5 rounded-full border border-white/10 backdrop-blur-md" aria-label="Main Navigation">
+              {navLinks.map((link) => {
+                const isActive = activeSection === link.id;
+                return (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    onClick={(e) => handleScrollTo(e, link.href, link.id)}
+                    className={`relative px-4 py-1.5 text-xs font-mono transition-colors rounded-full focus:outline-none focus:ring-1 focus:ring-accent ${
+                      isActive ? 'text-accent font-semibold' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="activeNavPill"
+                        className="absolute inset-0 rounded-full bg-white/10 border border-accent/40"
+                        transition={TRANSITIONS.snappy}
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="relative z-10">{link.name}</span>
+                  </a>
+                );
+              })}
+            </nav>
+          </div>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center md:hidden">
@@ -178,6 +180,30 @@ export const Navbar: React.FC = () => {
                   </motion.a>
                 );
               })}
+              {/* Mobile Social Links */}
+              <div className="pt-2 flex items-center gap-3">
+                <a
+                  href={settings.linkedinUrl || 'https://linkedin.com/in/bobby-esarapu-68543230'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-xs font-mono text-gray-300 hover:text-white hover:border-accent/40"
+                  aria-label="LinkedIn Profile"
+                >
+                  <Linkedin className="w-3.5 h-3.5 text-accent" />
+                  <span>LinkedIn</span>
+                </a>
+                <a
+                  href={settings.githubUrl || 'https://github.com/esarapubobby'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-xs font-mono text-gray-300 hover:text-white hover:border-accent/40"
+                  aria-label="GitHub Profile"
+                >
+                  <Github className="w-3.5 h-3.5 text-accent" />
+                  <span>GitHub</span>
+                </a>
+              </div>
+
               <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-gray-400 font-mono">
                 <span className="flex items-center gap-1.5">
                   <Terminal className="w-3.5 h-3.5 text-accent" />
