@@ -88,7 +88,16 @@ export function isGoogleDriveUrl(url?: string | null): boolean {
   return Boolean(extractGoogleDriveId(url));
 }
 
-export type VideoSourceType = 'youtube' | 'google-drive' | 'direct';
+/**
+ * Returns true if a given URL represents a valid Cloudinary video delivery asset.
+ */
+export function isCloudinaryVideoUrl(url?: string | null): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  return /cloudinary\.com/i.test(trimmed);
+}
+
+export type VideoSourceType = 'youtube' | 'cloudinary' | 'direct';
 
 export interface VideoSourceInfo {
   type: VideoSourceType;
@@ -98,8 +107,8 @@ export interface VideoSourceInfo {
 }
 
 /**
- * Detects whether a URL is a YouTube video, Google Drive video, or direct video file,
- * returning the appropriate embeddable URL.
+ * Detects whether a URL is a YouTube video, Cloudinary video, or direct video file,
+ * returning the appropriate embeddable / stream URL.
  */
 export function detectVideoSource(url?: string | null): VideoSourceInfo | null {
   if (!url || typeof url !== 'string') return null;
@@ -117,19 +126,18 @@ export function detectVideoSource(url?: string | null): VideoSourceInfo | null {
     };
   }
 
-  // 2. Google Drive
-  const driveEmbed = toGoogleDriveEmbedUrl(trimmed);
-  if (driveEmbed) {
+  // 2. Cloudinary video delivery URL
+  if (isCloudinaryVideoUrl(trimmed)) {
     return {
-      type: 'google-drive',
-      embedUrl: driveEmbed,
+      type: 'cloudinary',
+      embedUrl: trimmed,
       rawUrl: trimmed,
-      sourceLabel: 'Google Drive Video',
+      sourceLabel: 'Cloudinary Gameplay Video',
     };
   }
 
   // 3. Direct HTML5 video file
-  if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(trimmed)) {
+  if (/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(trimmed)) {
     return {
       type: 'direct',
       embedUrl: trimmed,
@@ -143,28 +151,45 @@ export function detectVideoSource(url?: string | null): VideoSourceInfo | null {
 
 /**
  * Determines the primary video for a project, prioritizing YouTube (e.g. DeadZone trailer),
- * then Google Drive video (e.g. driveVideoUrl or Google Drive link pasted in gameplayVideoUrl),
- * then demoUrl fallback if it links to video.
+ * then Cloudinary video URL (cloudinaryVideoUrl), then direct video formats.
  */
 export function getProjectVideo(project?: Project | null): VideoSourceInfo | null {
   if (!project) return null;
 
-  // 1. Check gameplayVideoUrl (YouTube trailer or direct video)
+  // 1. YouTube trailer priority (DeadZone has gameplayVideoUrl: 'https://youtu.be/OihvAqWn06w')
+  if (project.gameplayVideoUrl && typeof project.gameplayVideoUrl === 'string') {
+    const ytEmbed = formatYouTubeEmbedUrl(project.gameplayVideoUrl);
+    if (ytEmbed) {
+      return {
+        type: 'youtube',
+        embedUrl: ytEmbed,
+        rawUrl: project.gameplayVideoUrl.trim(),
+        sourceLabel: 'YouTube Trailer',
+      };
+    }
+  }
+
+  // 2. Cloudinary Gameplay Video URL
+  if (project.cloudinaryVideoUrl && typeof project.cloudinaryVideoUrl === 'string') {
+    const trimmed = project.cloudinaryVideoUrl.trim();
+    if (trimmed) {
+      const detected = detectVideoSource(trimmed);
+      if (detected) return detected;
+      if (isValidUrl(trimmed)) {
+        return {
+          type: 'cloudinary',
+          embedUrl: trimmed,
+          rawUrl: trimmed,
+          sourceLabel: 'Cloudinary Gameplay Video',
+        };
+      }
+    }
+  }
+
+  // 3. Fallback: Check if gameplayVideoUrl is a Cloudinary / direct video URL
   if (project.gameplayVideoUrl && typeof project.gameplayVideoUrl === 'string') {
     const info = detectVideoSource(project.gameplayVideoUrl);
-    if (info) return info;
-  }
-
-  // 2. Check driveVideoUrl (Google Drive video link)
-  if (project.driveVideoUrl && typeof project.driveVideoUrl === 'string') {
-    const info = detectVideoSource(project.driveVideoUrl);
-    if (info) return info;
-  }
-
-  // 3. Fallback: Check demoUrl in case user pasted a video or Drive link there
-  if (project.demoUrl && typeof project.demoUrl === 'string') {
-    const info = detectVideoSource(project.demoUrl);
-    if (info) return info;
+    if (info && info.type !== 'youtube') return info;
   }
 
   return null;

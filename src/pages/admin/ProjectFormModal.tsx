@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Project, ProjectStatus } from '../../types';
 import { X, Plus, Trash2, AlertCircle, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { VARIANTS, BUTTON_INTERACTIONS, TRANSITIONS } from '../../lib/animations';
-import { isValidUrl, extractGoogleDriveId } from '../../lib/urls';
+import { isValidUrl, isCloudinaryVideoUrl } from '../../lib/urls';
 
 interface ProjectFormModalProps {
   isOpen: boolean;
@@ -26,6 +26,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
     coverImage: '',
     screenshots: [],
     gameplayVideoUrl: '',
+    cloudinaryVideoUrl: '',
     driveVideoUrl: '',
     demoUrl: '',
     googlePlayUrl: '',
@@ -50,6 +51,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
     if (initialData) {
       setFormData({
         ...initialData,
+        cloudinaryVideoUrl: initialData.cloudinaryVideoUrl || '',
         driveVideoUrl: initialData.driveVideoUrl || '',
       });
       setTechInput(initialData.technologies?.join(', ') || '');
@@ -62,6 +64,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
         coverImage: '',
         screenshots: [],
         gameplayVideoUrl: '',
+        cloudinaryVideoUrl: '',
         driveVideoUrl: '',
         demoUrl: '',
         googlePlayUrl: '',
@@ -493,33 +496,33 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                   </p>
                 </div>
 
-                {/* Google Drive Gameplay Video URL (Below YouTube field) */}
+                {/* Cloudinary Gameplay Video URL (Below YouTube field) */}
                 <div>
                   <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
-                    GOOGLE DRIVE GAMEPLAY VIDEO URL
+                    Cloudinary Gameplay Video URL
                   </label>
                   <input
                     type="url"
-                    value={formData.driveVideoUrl || ''}
-                    onChange={(e) => setFormData({ ...formData, driveVideoUrl: e.target.value })}
-                    placeholder="e.g. https://drive.google.com/file/d/1A2B3C4D5E.../view?usp=sharing"
+                    value={formData.cloudinaryVideoUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, cloudinaryVideoUrl: e.target.value })}
+                    placeholder="e.g. https://res.cloudinary.com/<cloud_name>/video/upload/.../gameplay.mp4"
                     className="w-full px-3.5 py-2 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-mono"
                   />
-                  {formData.driveVideoUrl ? (
+                  {formData.cloudinaryVideoUrl ? (
                     <div className="mt-1 text-[10px] font-mono">
-                      {extractGoogleDriveId(formData.driveVideoUrl) ? (
+                      {isCloudinaryVideoUrl(formData.cloudinaryVideoUrl) ? (
                         <span className="text-accent">
-                          ✓ Google Drive file ID: {extractGoogleDriveId(formData.driveVideoUrl)}
+                          ✓ Cloudinary video delivery URL detected
                         </span>
                       ) : (
                         <span className="text-gray-400">
-                          Paste a Google Drive link (ensure file is set to "Anyone with the link can view")
+                          Direct video URL configured (MP4/WebM supported)
                         </span>
                       )}
                     </div>
                   ) : (
                     <p className="text-[10px] text-gray-500 font-mono mt-1">
-                      Paste a Google Drive share link (must have General Access set to "Anyone with the link can view")
+                      Paste a Cloudinary video delivery URL (e.g. https://res.cloudinary.com/.../upload/.../video.mp4)
                     </p>
                   )}
                 </div>

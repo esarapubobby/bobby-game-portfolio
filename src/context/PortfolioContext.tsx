@@ -416,6 +416,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         coverImage: projectData.coverImage || '',
         screenshots: projectData.screenshots || [],
         gameplayVideoUrl: projectData.gameplayVideoUrl || '',
+        cloudinaryVideoUrl: projectData.cloudinaryVideoUrl || '',
         driveVideoUrl: projectData.driveVideoUrl || '',
         demoUrl: projectData.demoUrl || '',
         googlePlayUrl: projectData.googlePlayUrl || '',

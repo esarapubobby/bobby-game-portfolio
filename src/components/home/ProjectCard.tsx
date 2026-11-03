@@ -161,17 +161,17 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
                 </motion.a>
               )}
 
-              {(project.demoUrl || project.gameplayVideoUrl || project.driveVideoUrl) && !project.googlePlayUrl && !project.itchUrl && (
+              {(project.demoUrl || project.gameplayVideoUrl || project.cloudinaryVideoUrl) && !project.googlePlayUrl && !project.itchUrl && (
                 <motion.a
-                  href={project.driveVideoUrl || project.gameplayVideoUrl || project.demoUrl}
+                  href={project.cloudinaryVideoUrl || project.gameplayVideoUrl || project.demoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   {...ICON_BUTTON_INTERACTIONS}
-                  title={project.driveVideoUrl ? 'Google Drive Video' : project.gameplayVideoUrl ? 'Gameplay Video' : 'Demo link'}
+                  title={project.cloudinaryVideoUrl ? 'Cloudinary Gameplay Video' : project.gameplayVideoUrl ? 'Gameplay Video' : 'Demo link'}
                   className="p-1.5 rounded-lg bg-white/5 hover:bg-white/20 text-gray-300 transition-colors"
                   aria-label={`${project.title} Video / Demo`}
                 >
-                  {project.driveVideoUrl ? (
+                  {project.cloudinaryVideoUrl ? (
                     <Play className="w-4 h-4 text-accent" />
                   ) : project.gameplayVideoUrl ? (
                     <Play className="w-4 h-4 text-red-400" />
